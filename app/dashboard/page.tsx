@@ -1,3 +1,6 @@
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 import { prisma } from "@/lib/prisma";
 import { AddTransactionButton } from "../transactions/_components/add-transaction-button";
 import { RecentTransactions } from "./_components/recent-transactions";
