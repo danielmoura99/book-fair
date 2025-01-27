@@ -1,4 +1,4 @@
-import { ArrowLeftRight, Book, Home } from "lucide-react";
+import { ArrowLeftRight, Book, CircleDollarSign, Home } from "lucide-react";
 
 import {
   Sidebar,
@@ -27,6 +27,11 @@ const items = [
     title: "Livros",
     url: "/books",
     icon: Book,
+  },
+  {
+    title: "Caixa",
+    url: "/cash",
+    icon: CircleDollarSign,
   },
 ];
 

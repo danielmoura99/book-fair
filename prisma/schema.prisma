@@ -7,6 +7,16 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum TransactionType {
+  SALE
+  EXCHANGE
+}
+
+enum CashRegisterStatus {
+  OPEN
+  CLOSED
+}
+
 model Book {
   id         String   @id @default(cuid())
   codFle     String   @unique // Código FLE
@@ -35,5 +45,34 @@ model Transaction {
   transactionDate DateTime @default(now())
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+  type            TransactionType @default(SALE)
+  returnedBookId  String?        // Para trocas
+  priceDifference Decimal?       @db.Decimal(10, 2)
+  cashRegisterId  String?
+  cashRegister    CashRegister? @relation(fields: [cashRegisterId], references: [id])
+}
+
+model CashRegister {
+  id            String    @id @default(cuid())
+  openingDate   DateTime
+  closingDate   DateTime?
+  initialAmount Decimal   @db.Decimal(10, 2)
+  finalAmount   Decimal?  @db.Decimal(10, 2)
+  status        CashRegisterStatus @default(OPEN)
+  transactions  Transaction[]
+  withdrawals   CashWithdrawal[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  notes         String?
+  
+}
+
+model CashWithdrawal {
+  id              String       @id @default(cuid())
+  amount          Decimal      @db.Decimal(10, 2)
+  reason          String
+  cashRegisterId  String
+  cashRegister    CashRegister @relation(fields: [cashRegisterId], references: [id])
+  createdAt       DateTime     @default(now())
 }
 

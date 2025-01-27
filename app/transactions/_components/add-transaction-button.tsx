@@ -11,9 +11,22 @@ import {
 import { Plus } from "lucide-react";
 import { TransactionForm } from "./transaction-form";
 import { useState } from "react";
+import { useCashRegister } from "@/hooks/use-cash-register";
 
 export function AddTransactionButton() {
   const [open, setOpen] = useState(false);
+  const { isOpen, isLoading } = useCashRegister();
+
+  if (isLoading) return null;
+
+  if (!isOpen) {
+    return (
+      <Button disabled>
+        <Plus className="mr-2 h-4 w-4" />
+        Abra o caixa primeiro
+      </Button>
+    );
+  }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

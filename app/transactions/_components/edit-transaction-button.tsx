@@ -8,16 +8,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Transaction, Book } from "@prisma/client";
 import { Pencil } from "lucide-react";
-import { TransactionForm } from "./transaction-form";
+import { EditTransactionForm } from "./edit-transaction-form";
 import { SerializedTransaction } from "@/types";
 import { useState } from "react";
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-interface TransactionWithBook extends Transaction {
-  book: Book;
-}
 
 interface EditTransactionButtonProps {
   transaction: SerializedTransaction;
@@ -39,8 +33,8 @@ export function EditTransactionButton({
         <DialogHeader>
           <DialogTitle>Editar Venda</DialogTitle>
         </DialogHeader>
-        <TransactionForm
-          initialData={transaction}
+        <EditTransactionForm
+          transaction={transaction}
           onSuccess={() => setOpen(false)}
         />
       </DialogContent>

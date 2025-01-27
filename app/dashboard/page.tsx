@@ -5,6 +5,8 @@ import { DailyQuantityChart } from "./_components/daily-quantity-chart";
 import { TotalBookSalesChart } from "./_components/total-book-sales-chart";
 import { Card } from "@/components/ui/card";
 import Navbar from "@/components/sidebar";
+import { ExchangeTransactionButton } from "../transactions/_components/exchange-transaction-button";
+import { SerializedTransaction } from "@/types";
 
 async function getTotalQuantity() {
   const total = await prisma.transaction.aggregate({
@@ -15,7 +17,7 @@ async function getTotalQuantity() {
   return total._sum.quantity || 0;
 }
 
-async function getRecentTransactions() {
+async function getRecentTransactions(): Promise<SerializedTransaction[]> {
   const transactions = await prisma.transaction.findMany({
     take: 5,
     orderBy: [
@@ -30,9 +32,13 @@ async function getRecentTransactions() {
       book: true,
     },
   });
+
   return transactions.map((transaction) => ({
     ...transaction,
     totalAmount: Number(transaction.totalAmount),
+    priceDifference: transaction.priceDifference
+      ? Number(transaction.priceDifference)
+      : null,
     book: {
       ...transaction.book,
       coverPrice: Number(transaction.book.coverPrice),
@@ -40,7 +46,7 @@ async function getRecentTransactions() {
   }));
 }
 
-async function getAllTransactions() {
+async function getAllTransactions(): Promise<SerializedTransaction[]> {
   const transactions = await prisma.transaction.findMany({
     orderBy: {
       transactionDate: "desc",
@@ -53,6 +59,9 @@ async function getAllTransactions() {
   return transactions.map((transaction) => ({
     ...transaction,
     totalAmount: Number(transaction.totalAmount),
+    priceDifference: transaction.priceDifference
+      ? Number(transaction.priceDifference)
+      : null,
     book: {
       ...transaction.book,
       coverPrice: Number(transaction.book.coverPrice),
@@ -84,7 +93,11 @@ export default async function DashboardPage() {
                       {totalQuantity} unidades
                     </h2>
                   </div>
-                  <AddTransactionButton />
+
+                  <div className="flex items-center gap-2">
+                    <ExchangeTransactionButton />
+                    <AddTransactionButton />
+                  </div>
                 </div>
               </Card>
 

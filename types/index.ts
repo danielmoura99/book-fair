@@ -1,6 +1,7 @@
 import {
   Book as PrismaBook,
   Transaction as PrismaTransaction,
+  TransactionType,
 } from "@prisma/client";
 import { Decimal } from "@prisma/client/runtime/library";
 
@@ -28,13 +29,28 @@ export interface BookFormData {
   subject: string;
 }
 
-// Interfaces para Transações
 export interface TransactionWithBook extends PrismaTransaction {
   book: Book;
+  type: TransactionType;
+  returnedBookId: string | null;
 }
 
 export interface SerializedTransaction
-  extends Omit<PrismaTransaction, "totalAmount"> {
+  extends Omit<
+    PrismaTransaction,
+    "totalAmount" | "returnedBookId" | "priceDifference"
+  > {
   totalAmount: number;
   book: SerializedBook;
+  type: TransactionType;
+  returnedBookId: string | null;
+  priceDifference: number | null;
+}
+
+export interface ExchangeFormData {
+  returnedBookId: string;
+  newBookId: string;
+  paymentMethod?: string;
+  type: TransactionType;
+  priceDifference?: number;
 }

@@ -1,13 +1,24 @@
+//book-fair/app/api/transactions/route.ts
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-
-    // Ajusta o fuso horário para considerar a data local
     const transactionDate = new Date(body.date);
-    transactionDate.setHours(12); // Define meio-dia para evitar problemas de fuso horário
+    transactionDate.setHours(12);
+
+    // Verificar se existe um caixa aberto
+    const activeCashRegister = await prisma.cashRegister.findFirst({
+      where: { status: "OPEN" },
+    });
+
+    if (!activeCashRegister) {
+      return NextResponse.json(
+        { error: "Não há caixa aberto para registrar a venda" },
+        { status: 400 }
+      );
+    }
 
     // Usar transação do Prisma para garantir atomicidade
     const result = await prisma.$transaction(async (tx) => {
@@ -42,6 +53,8 @@ export async function POST(req: Request) {
           totalAmount: body.totalAmount,
           paymentMethod: body.paymentMethod,
           transactionDate: transactionDate, // Usando apenas transactionDate
+          cashRegisterId: activeCashRegister.id, // Associação com o caixa
+          type: body.type || "SALE",
         },
         include: {
           book: true,

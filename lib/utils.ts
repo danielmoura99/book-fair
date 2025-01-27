@@ -11,3 +11,18 @@ export function formatMoney(amount: number) {
     currency: "BRL",
   }).format(amount);
 }
+
+export function formatPrice(amount: number) {
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  }).format(amount);
+}
+
+export function formatDate(date: Date) {
+  return new Date(date).toLocaleDateString("pt-BR");
+}
+
+export function calculatePriceDifference(priceA: number, priceB: number) {
+  return Math.abs(priceA - priceB);
+}
