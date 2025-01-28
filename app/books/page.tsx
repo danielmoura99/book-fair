@@ -1,3 +1,6 @@
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 import Navbar from "@/components/sidebar";
 import { BookDataTable } from "./_components/book-data-table";
 import { prisma } from "@/lib/prisma";

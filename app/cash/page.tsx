@@ -1,5 +1,8 @@
 // app/cash/page.tsx
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 import { prisma } from "@/lib/prisma";
 import { calculateRegisterBalance } from "./_actions/cash_actions";
 import { CashRegisterStatus } from "./_components/cash-register-status";
