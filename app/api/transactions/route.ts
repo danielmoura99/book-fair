@@ -1,4 +1,4 @@
-//book-fair/app/api/transactions/route.ts
+//app/api/transactions/route.ts
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
@@ -51,15 +51,32 @@ export async function POST(req: Request) {
           bookId: body.bookId,
           quantity: body.quantity,
           totalAmount: body.totalAmount,
-          paymentMethod: body.paymentMethod,
-          transactionDate: transactionDate, // Usando apenas transactionDate
-          cashRegisterId: activeCashRegister.id, // Associação com o caixa
+          transactionDate: transactionDate,
+          cashRegisterId: activeCashRegister.id,
           type: body.type || "SALE",
+          operatorName: body.operatorName,
         },
         include: {
           book: true,
         },
       });
+
+      // Criar os registros de pagamento
+      if (body.payments && body.payments.length > 0) {
+        for (const payment of body.payments) {
+          await tx.payment.create({
+            data: {
+              transactionId: transaction.id,
+              method: payment.method,
+              amount: payment.amount.toString(),
+              amountReceived: payment.amountReceived
+                ? payment.amountReceived.toString()
+                : null,
+              change: payment.change ? payment.change.toString() : null,
+            },
+          });
+        }
+      }
 
       return transaction;
     });

@@ -27,6 +27,7 @@ export function TransactionDataTable({ data }: TransactionDataTableProps) {
             <TableHead>Código FLE</TableHead>
             <TableHead>Livro</TableHead>
             <TableHead>Quantidade</TableHead>
+            <TableHead>Operador</TableHead>
             <TableHead className="text-right">Valor Total</TableHead>
             <TableHead>Forma de Pagamento</TableHead>
             <TableHead className="text-right">Ações</TableHead>
@@ -43,6 +44,7 @@ export function TransactionDataTable({ data }: TransactionDataTableProps) {
               <TableCell>{transaction.book.codFle}</TableCell>
               <TableCell>{transaction.book.title}</TableCell>
               <TableCell>{transaction.quantity}</TableCell>
+              <TableCell>{transaction.operatorName}</TableCell>
               <TableCell className="text-right">
                 {new Intl.NumberFormat("pt-BR", {
                   style: "currency",

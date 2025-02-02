@@ -1,3 +1,5 @@
+//app/api/exchanges/route.ts
+
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
@@ -6,6 +8,18 @@ export async function POST(req: Request) {
     const body = await req.json();
     const transactionDate = new Date();
     transactionDate.setHours(12);
+
+    // Verificar se existe um caixa aberto
+    const activeCashRegister = await prisma.cashRegister.findFirst({
+      where: { status: "OPEN" },
+    });
+
+    if (!activeCashRegister) {
+      return NextResponse.json(
+        { error: "Não há caixa aberto para registrar a troca" },
+        { status: 400 }
+      );
+    }
 
     const result = await prisma.$transaction(async (tx) => {
       // Verificar livro devolvido
@@ -38,6 +52,8 @@ export async function POST(req: Request) {
         data: { quantity: { decrement: 1 } },
       });
 
+      const priceDifference = Number(body.priceDifference) || 0;
+
       // Registrar transação
       const transaction = await tx.transaction.create({
         data: {
@@ -45,9 +61,11 @@ export async function POST(req: Request) {
           bookId: body.newBookId,
           returnedBookId: body.returnedBookId,
           quantity: 1,
-          totalAmount: body.priceDifference || "0",
+          totalAmount: String(Math.abs(priceDifference)), // Sempre o valor absoluto
+          priceDifference: String(priceDifference), // Mantém o sinal para referência
           paymentMethod: body.paymentMethod || "EXCHANGE",
           transactionDate,
+          cashRegisterId: activeCashRegister.id,
         },
         include: {
           book: true,

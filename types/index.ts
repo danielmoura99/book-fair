@@ -45,6 +45,7 @@ export interface SerializedTransaction
   type: TransactionType;
   returnedBookId: string | null;
   priceDifference: number | null;
+  operatorName: string;
 }
 
 export interface ExchangeFormData {

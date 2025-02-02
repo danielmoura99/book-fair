@@ -1,4 +1,3 @@
-// src/app/transactions/_components/exchange-transaction-button.tsx
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -12,15 +11,31 @@ import {
 import { RepeatIcon } from "lucide-react";
 import { ExchangeForm } from "./exchange-form";
 import { useState } from "react";
+import { cn } from "@/lib/utils";
 
-export function ExchangeTransactionButton() {
+interface ExchangeTransactionButtonProps {
+  className?: string;
+  fullWidth?: boolean;
+  showIcon?: boolean;
+  variant?: "default" | "outline";
+}
+
+export function ExchangeTransactionButton({
+  className,
+  fullWidth,
+  showIcon = true,
+  variant = "outline",
+}: ExchangeTransactionButtonProps) {
   const [open, setOpen] = useState(false);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline">
-          <RepeatIcon className="mr-2 h-4 w-4" />
+        <Button
+          variant={variant}
+          className={cn(className, fullWidth && "w-full")}
+        >
+          {showIcon && <RepeatIcon className="mr-2 h-6 w-6" />}
           Troca/Devolução
         </Button>
       </DialogTrigger>

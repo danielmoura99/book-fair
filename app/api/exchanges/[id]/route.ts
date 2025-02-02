@@ -1,3 +1,5 @@
+//app/api/exchanges/[id]/route.ts
+
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 

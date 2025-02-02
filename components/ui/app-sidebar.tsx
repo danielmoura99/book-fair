@@ -1,4 +1,10 @@
-import { ArrowLeftRight, Book, CircleDollarSign, Home } from "lucide-react";
+import {
+  ArrowLeftRight,
+  Book,
+  CircleDollarSign,
+  Handshake,
+  Home,
+} from "lucide-react";
 
 import {
   Sidebar,
@@ -14,7 +20,12 @@ import {
 // Menu items.
 const items = [
   {
-    title: "Painel Principal",
+    title: "Vendas",
+    url: "/vendas",
+    icon: Handshake,
+  },
+  {
+    title: "Dashboard",
     url: "/dashboard",
     icon: Home,
   },
@@ -38,7 +49,7 @@ const items = [
 export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
-      <SidebarGroupLabel className="flex flex-col py-6 text-1xl text-bold overflow-hidden">
+      <SidebarGroupLabel className="flex flex-col py-10 text-xl text-bold overflow-hidden">
         Painel de Controle - FLE
       </SidebarGroupLabel>
       <SidebarContent>

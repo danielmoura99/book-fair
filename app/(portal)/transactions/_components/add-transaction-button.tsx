@@ -12,8 +12,21 @@ import { Plus } from "lucide-react";
 import { TransactionForm } from "./transaction-form";
 import { useState } from "react";
 import { useCashRegister } from "@/hooks/use-cash-register";
+import { cn } from "@/lib/utils";
 
-export function AddTransactionButton() {
+interface AddTransactionButtonProps {
+  className?: string;
+  fullWidth?: boolean;
+  showIcon?: boolean;
+  variant?: "default" | "outline";
+}
+
+export function AddTransactionButton({
+  className,
+  fullWidth,
+  showIcon = true,
+  variant = "default",
+}: AddTransactionButtonProps) {
   const [open, setOpen] = useState(false);
   const { isOpen, isLoading } = useCashRegister();
 
@@ -21,9 +34,9 @@ export function AddTransactionButton() {
 
   if (!isOpen) {
     return (
-      <Button disabled>
-        <Plus className="mr-2 h-4 w-4" />
-        Abra o caixa primeiro
+      <Button disabled className={cn(className, fullWidth && "w-full")}>
+        {showIcon && <Plus className="mr-2 h-6 w-6" />}
+        Nova Venda
       </Button>
     );
   }
@@ -31,12 +44,15 @@ export function AddTransactionButton() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" />
+        <Button
+          variant={variant}
+          className={cn(className, fullWidth && "w-full")}
+        >
+          {showIcon && <Plus className="mr-2 h-6 w-6" />}
           Nova Venda
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="max-w-[1000px] w-[90vw]">
         <DialogHeader>
           <DialogTitle>Registrar Nova Venda</DialogTitle>
         </DialogHeader>

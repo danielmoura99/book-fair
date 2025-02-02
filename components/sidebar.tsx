@@ -10,7 +10,8 @@ const Navbar = () => {
     <nav className="flex justify-between border-b border-solid px-8 py-4 text-2xl">
       {/* ESQUERDA */}
       <div className="flex items-center gap-10">
-        <Image src="/logo.png" width={120} height={39} alt="FLE Control" />
+        <Image src="/LogoFLE.png" width={110} height={39} alt="FLE Control" />
+        <Image src="/Logouse.png" width={110} height={39} alt="FLE Control" />
         <Link
           href="/"
           className={
