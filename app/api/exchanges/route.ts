@@ -1,5 +1,4 @@
 //app/api/exchanges/route.ts
-
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
@@ -63,12 +62,22 @@ export async function POST(req: Request) {
           quantity: 1,
           totalAmount: String(Math.abs(priceDifference)), // Sempre o valor absoluto
           priceDifference: String(priceDifference), // Mantém o sinal para referência
-          paymentMethod: body.paymentMethod || "EXCHANGE",
           transactionDate,
           cashRegisterId: activeCashRegister.id,
+          operatorName: body.operatorName || "SISTEMA",
+          // Criar o pagamento junto com a transação
+          payments: {
+            create: [
+              {
+                method: body.paymentMethod || "EXCHANGE",
+                amount: String(Math.abs(priceDifference)),
+              },
+            ],
+          },
         },
         include: {
           book: true,
+          payments: true,
         },
       });
 

@@ -22,15 +22,15 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body className={mulish.className}>
-        <SidebarProvider>
-          <AppSidebar />
-          <QueryClientProvider>
+        <QueryClientProvider>
+          <SidebarProvider>
+            <AppSidebar />
             <main className="flex-1 overflow-y-auto p-8 overflow-hidden">
               <SidebarTrigger />
               {children}
             </main>
-          </QueryClientProvider>
-        </SidebarProvider>
+          </SidebarProvider>
+        </QueryClientProvider>
       </body>
     </html>
   );

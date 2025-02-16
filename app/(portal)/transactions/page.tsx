@@ -15,6 +15,7 @@ async function getTransactions(): Promise<SerializedTransaction[]> {
     },
     include: {
       book: true,
+      payments: true,
     },
   });
 
@@ -29,6 +30,7 @@ async function getTransactions(): Promise<SerializedTransaction[]> {
       ...transaction.book,
       coverPrice: Number(transaction.book.coverPrice),
     },
+    paymentMethod: transaction.payments[0]?.method || "",
   }));
 }
 

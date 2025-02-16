@@ -28,6 +28,7 @@ import { useCashRegister } from "@/hooks/use-cash-register";
 import { OperatorSelector } from "./operator-select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PaymentManager } from "./payment-manager";
+import { BarcodeScanner } from "./barcode-scannet";
 
 const formSchema = z.object({
   operatorName: z.string().min(1, "Selecione o operador"),
@@ -223,8 +224,12 @@ export function TransactionForm({ onSuccess }: { onSuccess?: () => void }) {
               }
             >
               <Card className="p-4">
-                <Tabs defaultValue="search">
+                <Tabs defaultValue="scanner">
                   <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="scanner">
+                      <Barcode className="mr-2 h-4 w-4" />
+                      Scanner
+                    </TabsTrigger>
                     <TabsTrigger value="search">
                       <Search className="mr-2 h-4 w-4" />
                       Código FLE
@@ -232,10 +237,6 @@ export function TransactionForm({ onSuccess }: { onSuccess?: () => void }) {
                     <TabsTrigger value="list">
                       <List className="mr-2 h-4 w-4" />
                       Lista
-                    </TabsTrigger>
-                    <TabsTrigger value="scanner">
-                      <Barcode className="mr-2 h-4 w-4" />
-                      Scanner
                     </TabsTrigger>
                   </TabsList>
 
@@ -284,11 +285,10 @@ export function TransactionForm({ onSuccess }: { onSuccess?: () => void }) {
                   </TabsContent>
 
                   <TabsContent value="scanner">
-                    <Card className="p-6">
-                      <div className="text-center text-muted-foreground">
-                        Scanner será implementado em breve
-                      </div>
-                    </Card>
+                    <BarcodeScanner
+                      onScan={(book) => addToCart(book)}
+                      disabled={!selectedOperator}
+                    />
                   </TabsContent>
                 </Tabs>
 

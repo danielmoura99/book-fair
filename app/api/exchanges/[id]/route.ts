@@ -1,5 +1,4 @@
 //app/api/exchanges/[id]/route.ts
-
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
@@ -15,7 +14,7 @@ export async function PATCH(
     const result = await prisma.$transaction(async (tx) => {
       const exchange = await tx.transaction.findUnique({
         where: { id: params.id },
-        include: { book: true },
+        include: { book: true, payments: true },
       });
 
       if (!exchange) {
@@ -44,16 +43,38 @@ export async function PATCH(
         data: { quantity: { decrement: 1 } },
       });
 
+      // Atualizar ou criar pagamento
+      if (exchange.payments[0]) {
+        await tx.payment.update({
+          where: { id: exchange.payments[0].id },
+          data: {
+            method: body.paymentMethod || "EXCHANGE",
+            amount: String(Math.abs(body.priceDifference || 0)),
+          },
+        });
+      } else {
+        await tx.payment.create({
+          data: {
+            transactionId: params.id,
+            method: body.paymentMethod || "EXCHANGE",
+            amount: String(Math.abs(body.priceDifference || 0)),
+          },
+        });
+      }
+
       const transaction = await tx.transaction.update({
         where: { id: params.id },
         data: {
           bookId: body.newBookId,
           returnedBookId: body.returnedBookId,
-          totalAmount: body.priceDifference || "0",
-          paymentMethod: body.paymentMethod,
+          totalAmount: String(Math.abs(body.priceDifference || 0)),
+          priceDifference: String(body.priceDifference || 0),
           transactionDate,
         },
-        include: { book: true },
+        include: {
+          book: true,
+          payments: true,
+        },
       });
 
       return transaction;
@@ -79,10 +100,18 @@ export async function DELETE(
     const result = await prisma.$transaction(async (tx) => {
       const exchange = await tx.transaction.findUnique({
         where: { id: params.id },
+        include: { payments: true },
       });
 
       if (!exchange) {
         throw new Error("Troca não encontrada");
+      }
+
+      // Deletar pagamentos primeiro
+      if (exchange.payments.length > 0) {
+        await tx.payment.deleteMany({
+          where: { transactionId: params.id },
+        });
       }
 
       // Reverter estoques

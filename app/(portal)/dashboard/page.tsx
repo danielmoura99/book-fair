@@ -33,6 +33,7 @@ async function getRecentTransactions(): Promise<SerializedTransaction[]> {
     ],
     include: {
       book: true,
+      payments: true,
     },
   });
 
@@ -46,6 +47,7 @@ async function getRecentTransactions(): Promise<SerializedTransaction[]> {
       ...transaction.book,
       coverPrice: Number(transaction.book.coverPrice),
     },
+    paymentMethod: transaction.payments[0]?.method || "",
   }));
 }
 
@@ -56,6 +58,7 @@ async function getAllTransactions(): Promise<SerializedTransaction[]> {
     },
     include: {
       book: true,
+      payments: true,
     },
   });
 
@@ -69,6 +72,7 @@ async function getAllTransactions(): Promise<SerializedTransaction[]> {
       ...transaction.book,
       coverPrice: Number(transaction.book.coverPrice),
     },
+    paymentMethod: transaction.payments[0]?.method || "",
   }));
 }
 

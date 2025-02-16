@@ -1,6 +1,7 @@
 import {
   ArrowLeftRight,
   Book,
+  BookDown,
   CircleDollarSign,
   Handshake,
   Home,
@@ -43,6 +44,11 @@ const items = [
     title: "Caixa",
     url: "/cash",
     icon: CircleDollarSign,
+  },
+  {
+    title: "Relatórios",
+    url: "/relatorios",
+    icon: BookDown,
   },
 ];
 
