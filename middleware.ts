@@ -1,8 +1,13 @@
+//middleware.ts
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function middleware(request: NextRequest) {
+  // Redirecionamento da rota raiz para /vendas
+  if (request.nextUrl.pathname === "/") {
+    return NextResponse.redirect(new URL("/vendas", request.url));
+  }
+
   const response = NextResponse.next();
 
   // Previne cache em todas as rotas
@@ -17,14 +22,18 @@ export const config = {
   matcher: [
     // Páginas principais
     "/", // Painel principal
+    "/vendas/:path*", // Página de vendas e subpáginas
     "/transactions/:path*", // Página de transações e subpáginas
     "/books/:path*", // Página de livros e subpáginas
     "/cash/:path*", // Página de caixa e subpáginas
+    "/relatorios/:path*", // Página de relatórios e subpáginas
 
     // APIs
     "/api/transactions/:path*", // APIs de transações
     "/api/books/:path*", // APIs de livros
     "/api/cash/:path*", // APIs de caixa
+    "/api/reports/:path*", // APIs de relatórios
+    "/api/exchanges/:path*", // APIs de trocas
 
     // Exclui arquivos estáticos
     "/((?!_next/static|_next/image|favicon.ico).*)",

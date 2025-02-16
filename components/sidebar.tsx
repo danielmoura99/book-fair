@@ -11,7 +11,7 @@ const Navbar = () => {
       {/* ESQUERDA */}
       <div className="flex items-center gap-10">
         <Image src="/LogoFLE.png" width={110} height={39} alt="FLE Control" />
-        <Image src="/Logouse.png" width={110} height={39} alt="FLE Control" />
+        <Image src="/logouse.png" width={110} height={39} alt="FLE Control" />
         <Link
           href="/"
           className={
