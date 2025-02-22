@@ -167,7 +167,7 @@ export function PaymentManager({
 
             <Input
               type="number"
-              placeholder="Valor"
+              placeholder="Valor Cobrado"
               value={currentAmount}
               onChange={(e) => setCurrentAmount(e.target.value)}
               min={0}
