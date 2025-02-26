@@ -10,8 +10,6 @@
   ![React](https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black)
 </div>
 
-![Book Fair Dashboard](https://via.placeholder.com/1200x630/0A2540/FFFFFF?text=Book+Fair+Manager+Dashboard)
-
 > **Desenvolvido com tecnologias modernas, este sistema oferece controle total sobre o ciclo de vida de uma feira de livros: do cadastro e gestão de estoque ao controle financeiro, vendas, trocas e relatórios.**
 
 ## 📑 Índice
@@ -290,7 +288,6 @@ Funcionalidades planejadas para as próximas versões:
 Documentação detalhada está disponível nos seguintes arquivos:
 
 - [Funcionalidades](FEATURES.md) - Descrição detalhada dos recursos
-- [Contribuindo](CONTRIBUTING.md) - Guia para desenvolvedores
 
 ## 👥 Autor
 
