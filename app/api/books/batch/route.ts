@@ -14,6 +14,7 @@ interface Book {
   coverPrice: number;
   title: string;
   publisher?: string;
+  distributor?: string;
   subject?: string;
   barCode?: string;
 }
@@ -69,6 +70,7 @@ export async function POST(req: Request) {
                       coverPrice: book.coverPrice,
                       title: book.title,
                       publisher: book.publisher || existing.publisher,
+                      distributor: book.distributor || existing.distributor,
                       subject: book.subject || existing.subject,
                       barCode: book.barCode || existing.barCode,
                       author: existing.author,
@@ -85,6 +87,7 @@ export async function POST(req: Request) {
                       quantity: book.quantity,
                       coverPrice: book.coverPrice,
                       publisher: book.publisher || "",
+                      distributor: book.distributor || "",
                       subject: book.subject || "",
                       barCode: book.barCode,
                       author: "Não informado",

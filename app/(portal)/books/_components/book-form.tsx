@@ -30,6 +30,7 @@ const formSchema = z.object({
   author: z.string().min(1, "Autor é obrigatório"),
   medium: z.string().min(1, "Médium é obrigatório"),
   publisher: z.string().min(1, "Editora é obrigatória"),
+  distributor: z.string().min(1, "Distribuidor é obrigatório"),
   subject: z.string().min(1, "Assunto é obrigatório"),
 });
 
@@ -225,6 +226,19 @@ export function BookForm({ initialData, onSuccess }: BookFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Editora</FormLabel>
+                <FormControl>
+                  <Input {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="distributor"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Distribuidor</FormLabel>
                 <FormControl>
                   <Input {...field} />
                 </FormControl>

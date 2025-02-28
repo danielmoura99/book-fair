@@ -25,6 +25,7 @@ interface BookData {
   coverPrice: number;
   title: string;
   publisher: string;
+  distributor: string;
   subject: string;
 }
 
@@ -123,7 +124,8 @@ export function UploadBooks() {
         coverPrice: normalizePrice(row[3]),
         title: String(row[4] || "").trim(),
         publisher: String(row[5] || "").trim(),
-        subject: String(row[6] || "").trim(),
+        distributor: String(row[6] || "").trim(),
+        subject: String(row[7] || "").trim(),
       }));
 
       setProgress(50);

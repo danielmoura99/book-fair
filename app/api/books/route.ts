@@ -33,6 +33,7 @@ export async function POST(request: Request) {
         author: body.author,
         medium: body.medium,
         publisher: body.publisher,
+        distributor: body.distributor,
         subject: body.subject,
       },
     });

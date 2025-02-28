@@ -20,7 +20,7 @@ const Navbar = () => {
               pathname === "/" ? "font-bold text-primary" : "text-balance"
             }
           >
-            53º Feira do Livro Espírita
+            54º Feira do Livro Espírita
           </Link>
           <span className="text-base text-muted-foreground">
             31º Feira do Livro Espírita Infantil

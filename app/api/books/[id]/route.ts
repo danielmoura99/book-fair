@@ -20,6 +20,7 @@ export async function PATCH(
       author: body.author,
       medium: body.medium,
       publisher: body.publisher,
+      distributor: body.distributor,
       subject: body.subject,
     };
 

@@ -28,6 +28,7 @@ model Book {
   author     String   // Autor
   medium     String   // Médium
   publisher  String   // Editora
+  distributor String  // Dostribuidora
   subject    String   // Assunto
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt

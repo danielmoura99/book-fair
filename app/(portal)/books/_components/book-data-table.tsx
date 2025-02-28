@@ -69,6 +69,9 @@ export function BookDataTable({ data }: BookDataTableProps) {
                   Editora
                 </TableHead>
                 <TableHead className="font-semibold text-black">
+                  Distribuidor
+                </TableHead>
+                <TableHead className="font-semibold text-black">
                   Assunto
                 </TableHead>
                 <TableHead className="font-semibold text-black text-right">
@@ -92,6 +95,7 @@ export function BookDataTable({ data }: BookDataTableProps) {
                   <TableCell>{book.author}</TableCell>
                   <TableCell>{book.medium}</TableCell>
                   <TableCell>{book.publisher}</TableCell>
+                  <TableCell>{book.distributor}</TableCell>
                   <TableCell>{book.subject}</TableCell>
                   <TableCell className="text-right">{book.quantity}</TableCell>
                   <TableCell className="text-right">

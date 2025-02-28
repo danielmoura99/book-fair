@@ -13,6 +13,7 @@ export interface Book extends PrismaBook {
 // Interface para dados serializados (quando os dados vêm do servidor)
 export interface SerializedBook extends Omit<Book, "coverPrice"> {
   coverPrice: number;
+  distributor: string;
 }
 
 // Interface para o formulário
@@ -26,6 +27,7 @@ export interface BookFormData {
   author: string;
   medium: string;
   publisher: string;
+  distributor: string;
   subject: string;
 }
 
