@@ -11,6 +11,7 @@ export async function POST(
       data: {
         amount: body.amount,
         reason: body.reason,
+        operatorName: body.operatorName,
         cashRegisterId: params.id,
       },
     });

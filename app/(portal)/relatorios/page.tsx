@@ -1,4 +1,4 @@
-//app/(portal)/relatorios/page.tsx
+// app/(portal)/relatorios/page.tsx
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CashClosingReport } from "./_components/cash-closing-report";
 import Navbar from "@/components/sidebar";
 import SoldBooksReport from "./_components/sold-books-report";
+import InventoryReport from "./_components/inventory-report";
 
 export default function ReportsPage() {
   return (
@@ -20,13 +21,19 @@ export default function ReportsPage() {
         <Tabs defaultValue="books" className="space-y-4">
           <TabsList>
             <TabsTrigger value="books">Livros Vendidos</TabsTrigger>
+            <TabsTrigger value="inventory">Livros em Estoque</TabsTrigger>
             <TabsTrigger value="cash">Fechamento de Caixa</TabsTrigger>
           </TabsList>
 
           <TabsContent value="books" className="space-y-4">
             <Card className="p-6">
-              {" "}
-              <SoldBooksReport />{" "}
+              <SoldBooksReport />
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="inventory" className="space-y-4">
+            <Card className="p-6">
+              <InventoryReport />
             </Card>
           </TabsContent>
 

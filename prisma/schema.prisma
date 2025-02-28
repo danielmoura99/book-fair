@@ -82,6 +82,7 @@ model CashWithdrawal {
   id              String       @id @default(cuid())
   amount          Decimal      @db.Decimal(10, 2)
   reason          String
+  operatorName    String 
   cashRegisterId  String
   cashRegister    CashRegister @relation(fields: [cashRegisterId], references: [id])
   createdAt       DateTime     @default(now())

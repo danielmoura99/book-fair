@@ -47,6 +47,14 @@ export async function GET() {
         0
       );
 
+      const formattedWithdrawals = register.withdrawals.map((w) => ({
+        id: w.id,
+        amount: Number(w.amount),
+        reason: w.reason,
+        operatorName: w.operatorName || "Sistema", // Valor padrão caso não tenha operador
+        createdAt: w.createdAt.toISOString(),
+      }));
+
       // Formata as transações
       const formattedTransactions = register.transactions.map((t) => ({
         id: t.id,
@@ -88,6 +96,7 @@ export async function GET() {
           })
         ),
         transactions: formattedTransactions,
+        withdrawals: formattedWithdrawals,
       };
     });
 

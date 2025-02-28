@@ -110,6 +110,7 @@ export function TransactionStatement({ register }: TransactionStatementProps) {
       type: "WITHDRAWAL" as const,
       amount: -Number(w.amount),
       paymentMethod: "WITHDRAWAL",
+      operatorName: w.operatorName,
     })),
   ].sort((a, b) => b.date.getTime() - a.date.getTime());
 

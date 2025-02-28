@@ -58,3 +58,28 @@ export interface ExchangeFormData {
   type: TransactionType;
   priceDifference?: number;
 }
+
+// Tipo para CashRegister serializado
+export interface SerializedCashRegister {
+  id: string;
+  openingDate: Date;
+  closingDate: Date | null;
+  initialAmount: number; // Era Decimal, agora é number
+  finalAmount: number | null; // Era Decimal, agora é number
+  status: "OPEN" | "CLOSED";
+  createdAt: Date;
+  updatedAt: Date;
+  notes: string | null;
+  transactions: SerializedTransaction[];
+  withdrawals: SerializedCashWithdrawal[];
+}
+
+// Tipo para CashWithdrawal serializado
+export interface SerializedCashWithdrawal {
+  id: string;
+  amount: number; // Era Decimal, agora é number
+  reason: string;
+  operatorName: string;
+  cashRegisterId: string;
+  createdAt: Date;
+}

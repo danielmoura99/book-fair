@@ -156,7 +156,13 @@ export function TransactionForm({ onSuccess }: { onSuccess?: () => void }) {
       return;
     }
 
-    if (payments.reduce((sum, p) => sum + p.amount, 0) !== totalAmount) {
+    const paymentSum =
+      Math.round(payments.reduce((sum, p) => sum + p.amount, 0) * 100) / 100;
+    const roundedTotal = Math.round(totalAmount * 100) / 100;
+
+    // Usar uma pequena tolerância para a comparação
+    const EPSILON = 0.01; // 1 centavo de tolerância
+    if (Math.abs(paymentSum - roundedTotal) > EPSILON) {
       setError(
         "O valor total dos pagamentos não corresponde ao valor da venda"
       );

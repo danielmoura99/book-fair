@@ -167,50 +167,6 @@ export function CashClosingReport() {
                   </p>
                 </div>
               </div>
-
-              <div>
-                <h5 className="font-semibold mb-2">Extrato Detalhado</h5>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Data/Hora</TableHead>
-                      <TableHead>Livro</TableHead>
-                      <TableHead className="text-right">Qtd.</TableHead>
-                      <TableHead>Pagamento</TableHead>
-                      <TableHead className="text-right">Valor</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {closing.transactions
-                      .sort(
-                        (a, b) =>
-                          new Date(b.transactionDate).getTime() -
-                          new Date(a.transactionDate).getTime()
-                      )
-                      .map((transaction) => (
-                        <TableRow key={transaction.id}>
-                          <TableCell>
-                            {new Date(
-                              transaction.transactionDate
-                            ).toLocaleString("pt-BR")}
-                          </TableCell>
-                          <TableCell>{transaction.book.title}</TableCell>
-                          <TableCell className="text-right">
-                            {transaction.quantity}
-                          </TableCell>
-                          <TableCell>
-                            {transaction.payments
-                              .map((p) => formatPaymentMethod(p.method))
-                              .join(", ")}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {formatPrice(transaction.totalAmount)}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                  </TableBody>
-                </Table>
-              </div>
             </div>
           </Card>
         ))}

@@ -52,18 +52,21 @@ export function PaymentManager({
     if (!currentMethod || !currentAmount) return;
 
     const amount = parseFloat(currentAmount);
-    if (amount <= 0 || amount > remainingAmount) return;
+    const roundedAmount = Math.round(amount * 100) / 100;
+    const roundedRemainingAmount = Math.round(remainingAmount * 100) / 100;
+
+    if (roundedAmount <= 0 || roundedAmount > roundedRemainingAmount) return;
 
     if (currentMethod === "CASH" && amountReceived) {
       const received = parseFloat(amountReceived);
       // Verificamos se o valor recebido é suficiente
-      if (received >= amount) {
+      if (received >= roundedAmount) {
         const change = received - amount;
         const newPayment: PaymentSplit = {
           method: currentMethod,
-          amount: amount, // Valor que o cliente efetivamente está pagando (valor restante)
+          amount: roundedAmount, // Valor que o cliente efetivamente está pagando (valor restante)
           amountReceived: received, // Valor que o cliente entregou
-          change: change, // Troco a ser devolvido
+          change: Math.round(change * 100) / 100, // Troco a ser devolvido
         };
 
         const updatedPayments = [...payments, newPayment];
@@ -74,7 +77,7 @@ export function PaymentManager({
       // Para outros métodos de pagamento
       const newPayment: PaymentSplit = {
         method: currentMethod,
-        amount,
+        amount: roundedAmount,
       };
 
       const updatedPayments = [...payments, newPayment];

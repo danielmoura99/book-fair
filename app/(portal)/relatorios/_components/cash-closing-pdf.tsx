@@ -64,6 +64,9 @@ const styles = StyleSheet.create({
   quantityCell: { width: "10%", textAlign: "right" },
   paymentCell: { width: "20%" },
   totalCell: { width: "15%", textAlign: "right" },
+  reasonCell: { width: "45%" },
+  operatorCell: { width: "20%" },
+  amountCell: { width: "15%", textAlign: "right" },
 });
 
 interface Payment {
@@ -97,6 +100,14 @@ interface PaymentSummary {
   count: number;
 }
 
+interface Withdrawal {
+  id: string;
+  amount: number;
+  reason: string;
+  operatorName: string;
+  createdAt: string;
+}
+
 interface CashClosingData {
   id: string;
   date: string;
@@ -105,6 +116,7 @@ interface CashClosingData {
   totalSales: number;
   totalWithdrawals: number;
   paymentMethods: PaymentSummary[];
+  withdrawals?: Withdrawal[];
 }
 
 interface CashClosingPDFProps {
@@ -168,6 +180,47 @@ export const CashClosingPDF = ({
           ))}
         </View>
       </View>
+
+      {closing.withdrawals && closing.withdrawals.length > 0 && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Retiradas de Caixa</Text>
+          <View style={styles.tableContainer}>
+            <View style={[styles.tableRow, styles.tableHeader]}>
+              <View style={[styles.tableCell, styles.dateTimeCell]}>
+                <Text>Data/Hora</Text>
+              </View>
+              <View style={[styles.tableCell, styles.reasonCell]}>
+                <Text>Motivo</Text>
+              </View>
+              <View style={[styles.tableCell, styles.operatorCell]}>
+                <Text>Operador</Text>
+              </View>
+              <View style={[styles.tableCell, styles.amountCell]}>
+                <Text>Valor</Text>
+              </View>
+            </View>
+
+            {closing.withdrawals.map((withdrawal) => (
+              <View key={withdrawal.id} style={styles.tableRow}>
+                <View style={[styles.tableCell, styles.dateTimeCell]}>
+                  <Text>
+                    {new Date(withdrawal.createdAt).toLocaleString("pt-BR")}
+                  </Text>
+                </View>
+                <View style={[styles.tableCell, styles.reasonCell]}>
+                  <Text>{withdrawal.reason}</Text>
+                </View>
+                <View style={[styles.tableCell, styles.operatorCell]}>
+                  <Text>{withdrawal.operatorName}</Text>
+                </View>
+                <View style={[styles.tableCell, styles.amountCell]}>
+                  <Text>{formatPrice(withdrawal.amount)}</Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        </View>
+      )}
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Totais</Text>
