@@ -1,6 +1,6 @@
 <div align="center">
   <h1>Book Fair Manager</h1>
-  <p><strong>Sistema completo de gerenciamento para feiras de livros</strong></p>
+  <p><strong>Complete management system for book fairs</strong></p>
   
   ![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=next.js&logoColor=white)
   ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
@@ -10,104 +10,104 @@
   ![React](https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black)
 </div>
 
-> **Desenvolvido com tecnologias modernas, este sistema oferece controle total sobre o ciclo de vida de uma feira de livros: do cadastro e gestão de estoque ao controle financeiro, vendas, trocas e relatórios.**
+> **Developed with modern technologies, this system offers complete control over the lifecycle of a book fair: from registration and inventory management to financial control, sales, exchanges, and reports.**
 
-## 📑 Índice
+## 📑 Table of Contents
 
-- [✨ Visão Geral](#-visão-geral)
-- [🚀 Recursos e Funcionalidades](#-recursos-e-funcionalidades)
-- [🛠️ Stack Tecnológica](#️-stack-tecnológica)
-- [🔧 Configuração e Instalação](#-configuração-e-instalação)
-- [📱 Responsividade](#-responsividade)
-- [🌟 Roadmap e Recursos Futuros](#-roadmap-e-recursos-futuros)
-- [📚 Documentação](#-documentação)
-- [👥 Autor](#-autor)
+- [✨ Overview](#-overview)
+- [🚀 Features and Functionality](#-features-and-functionality)
+- [🛠️ Technology Stack](#️-technology-stack)
+- [🔧 Configuration and Installation](#-configuration-and-installation)
+- [📱 Responsiveness](#-responsiveness)
+- [🌟 Roadmap and Future Features](#-roadmap-and-future-features)
+- [📚 Documentation](#-documentation)
+- [👥 Author](#-author)
 
-## ✨ Visão Geral
+## ✨ Overview
 
-O **Book Fair Manager** é uma aplicação web completa para organizações que realizam feiras de livros, com foco especial em feiras de livros. O sistema gerencia todo o ciclo operacional:
+**Book Fair Manager** is a complete web application for organizations that hold book fairs, with a special focus on book fairs. The system manages the entire operational cycle:
 
-1. 📚 **Gerenciamento de Livros** - Cadastro detalhado com código, autor, editora e outros campos
-2. 💰 **Controle de Caixa** - Gestão financeira com abertura, fechamento e relatórios
-3. 🛒 **Vendas e Trocas** - Interface intuitiva para operações de vendas e devoluções
-4. 📊 **Relatórios Analíticos** - Dados completos de desempenho e vendas
+1. 📚 **Book Management** - Detailed registration with code, author, publisher, and other fields
+2. 💰 **Cash Control** - Financial management with opening, closing, and reports
+3. 🛒 **Sales and Exchanges** - Intuitive interface for sales and return operations
+4. 📊 **Analytical Reports** - Complete performance and sales data
 
-### Fluxo de Trabalho
+### Workflow
 
 ```mermaid
 graph TD
-    A[Cadastro de Livros] -->|Estoque| B(Abertura de Caixa)
-    B --> C{Operações}
-    C -->|Venda| D[Processamento de Pagamento]
-    C -->|Troca| E[Registro de Devolução/Troca]
-    C -->|Consulta| F[Terminal de Busca]
-    D --> G[Atualização de Estoque]
+    A[Book Registration] -->|Inventory| B(Cash Register Opening)
+    B --> C{Operations}
+    C -->|Sale| D[Payment Processing]
+    C -->|Exchange| E[Return/Exchange Registration]
+    C -->|Query| F[Search Terminal]
+    D --> G[Inventory Update]
     E --> G
-    G --> H[Fechamento de Caixa]
-    H --> I[Relatórios e Análises]
+    G --> H[Cash Register Closing]
+    H --> I[Reports and Analysis]
 ```
 
-O sistema oferece uma interface administrativa completa onde gestores podem monitorar o estoque, acompanhar vendas, gerenciar operações financeiras e extrair relatórios detalhados para tomada de decisões.
+The system offers a complete administrative interface where managers can monitor inventory, track sales, manage financial operations, and extract detailed reports for decision-making.
 
-## 🚀 Recursos e Funcionalidades
+## 🚀 Features and Functionality
 
 <table>
   <tr>
     <td width="50%">
-      <h3>📚 Gerenciamento de Livros</h3>
+      <h3>📚 Book Management</h3>
       <ul>
-        <li>Cadastro completo com código FLE único</li>
-        <li>Controle de estoque automático</li>
-        <li>Importação em massa via Excel</li>
-        <li>Busca por título, autor, código ou assunto</li>
+        <li>Complete registration with unique FLE code</li>
+        <li>Automatic inventory control</li>
+        <li>Bulk import via Excel</li>
+        <li>Search by title, author, code, or subject</li>
       </ul>
     </td>
     <td width="50%">
-      <h3>🛒 Sistema de Vendas</h3>
+      <h3>🛒 Sales System</h3>
       <ul>
-        <li>Interface otimizada para operação rápida</li>
-        <li>Suporte para leitor de código de barras</li>
-        <li>Múltiplas formas de pagamento</li>
-        <li>Cálculo automático de troco</li>
+        <li>Optimized interface for fast operation</li>
+        <li>Barcode reader support</li>
+        <li>Multiple payment methods</li>
+        <li>Automatic change calculation</li>
       </ul>
     </td>
   </tr>
   <tr>
     <td width="50%">
-      <h3>💰 Gestão de Caixa</h3>
+      <h3>💰 Cash Management</h3>
       <ul>
-        <li>Abertura e fechamento com balanço</li>
-        <li>Registro de retiradas com justificativa</li>
-        <li>Extrato detalhado de movimentações</li>
-        <li>Relatórios por período</li>
+        <li>Opening and closing with balance</li>
+        <li>Withdrawal recording with justification</li>
+        <li>Detailed transaction statement</li>
+        <li>Reports by period</li>
       </ul>
     </td>
     <td width="50%">
-      <h3>🔄 Trocas e Devoluções</h3>
+      <h3>🔄 Exchanges and Returns</h3>
       <ul>
-        <li>Processo intuitivo de devolução</li>
-        <li>Cálculo automático de diferença de valores</li>
-        <li>Rastreabilidade completa</li>
-        <li>Atualização automática do estoque</li>
+        <li>Intuitive return process</li>
+        <li>Automatic calculation of value differences</li>
+        <li>Complete traceability</li>
+        <li>Automatic inventory update</li>
       </ul>
     </td>
   </tr>
 </table>
 
-### Recursos Adicionais
+### Additional Features
 
-- **Terminal de Consulta**: Interface específica para visitantes
-- **Dashboard Interativo**: Visão consolidada de métricas e desempenho
-- **Relatórios em PDF**: Exportação de relatórios detalhados
-- **Operadores**: Controle de quem realizou cada operação
+- **Query Terminal**: Specific interface for visitors
+- **Interactive Dashboard**: Consolidated view of metrics and performance
+- **PDF Reports**: Exportation of detailed reports
+- **Operators**: Control of who performed each operation
 
-## 🛠️ Stack Tecnológica
+## 🛠️ Technology Stack
 
 <table>
   <tr>
-    <th>Categoria</th>
-    <th>Tecnologias</th>
-    <th>Propósito</th>
+    <th>Category</th>
+    <th>Technologies</th>
+    <th>Purpose</th>
   </tr>
   <tr>
     <td><strong>Frontend</strong></td>
@@ -117,7 +117,7 @@ O sistema oferece uma interface administrativa completa onde gestores podem moni
       <img src="https://img.shields.io/badge/TailwindCSS-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white" alt="TailwindCSS" />
       <img src="https://img.shields.io/badge/shadcn/ui-000000?style=flat-square&logo=shadcnui&logoColor=white" alt="shadcn/ui" />
     </td>
-    <td>Interface responsiva, componentizada e de alta performance com server-side rendering e otimização automática.</td>
+    <td>Responsive, componentized, and high-performance interface with server-side rendering and automatic optimization.</td>
   </tr>
   <tr>
     <td><strong>Backend</strong></td>
@@ -125,7 +125,7 @@ O sistema oferece uma interface administrativa completa onde gestores podem moni
       <img src="https://img.shields.io/badge/Next.js_API-000000?style=flat-square&logo=next.js&logoColor=white" alt="Next.js API" />
       <img src="https://img.shields.io/badge/Node.js-339933?style=flat-square&logo=node.js&logoColor=white" alt="Node.js" />
     </td>
-    <td>API Routes do Next.js para endpoints serverless com Node.js, eliminando a necessidade de um servidor separado.</td>
+    <td>Next.js API Routes for serverless endpoints with Node.js, eliminating the need for a separate server.</td>
   </tr>
   <tr>
     <td><strong>Database</strong></td>
@@ -133,15 +133,15 @@ O sistema oferece uma interface administrativa completa onde gestores podem moni
       <img src="https://img.shields.io/badge/PostgreSQL-4169E1?style=flat-square&logo=postgresql&logoColor=white" alt="PostgreSQL" />
       <img src="https://img.shields.io/badge/Prisma-2D3748?style=flat-square&logo=prisma&logoColor=white" alt="Prisma" />
     </td>
-    <td>Database relacional robusto com ORM moderno que fornece type-safety e migrations automatizadas.</td>
+    <td>Robust relational database with a modern ORM that provides type-safety and automated migrations.</td>
   </tr>
   <tr>
-    <td><strong>Visualização</strong></td>
+    <td><strong>Visualization</strong></td>
     <td>
       <img src="https://img.shields.io/badge/Recharts-22B5BF?style=flat-square&logo=recharts&logoColor=white" alt="Recharts" />
       <img src="https://img.shields.io/badge/React_PDF-EC5990?style=flat-square&logo=reacthookform&logoColor=white" alt="React PDF" />
     </td>
-    <td>Gráficos interativos para dashboard e geração de relatórios em PDF com layout profissional.</td>
+    <td>Interactive charts for dashboard and generation of PDF reports with professional layout.</td>
   </tr>
   <tr>
     <td><strong>DevOps</strong></td>
@@ -149,146 +149,146 @@ O sistema oferece uma interface administrativa completa onde gestores podem moni
       <img src="https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker" />
       <img src="https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript" />
     </td>
-    <td>Containerização para ambiente de desenvolvimento consistente e tipagem estática para código mais seguro.</td>
+    <td>Containerization for consistent development environment and static typing for safer code.</td>
   </tr>
   <tr>
-    <td><strong>Ferramentas</strong></td>
+    <td><strong>Tools</strong></td>
     <td>
       <img src="https://img.shields.io/badge/React_Hook_Form-EC5990?style=flat-square&logo=react-hook-form&logoColor=white" alt="React Hook Form" />
       <img src="https://img.shields.io/badge/React_Query-FF4154?style=flat-square&logo=react-query&logoColor=white" alt="React Query" />
       <img src="https://img.shields.io/badge/Zod-3E67B1?style=flat-square&logo=zod&logoColor=white" alt="Zod" />
       <img src="https://img.shields.io/badge/XLSX-217346?style=flat-square&logo=microsoftexcel&logoColor=white" alt="XLSX" />
     </td>
-    <td>Bibliotecas especializadas para manipulação de formulários, gerenciamento de estado, validação e processamento de planilhas.</td>
+    <td>Specialized libraries for form handling, state management, validation, and spreadsheet processing.</td>
   </tr>
 </table>
 
-### 🏗️ Arquitetura
+### 🏗️ Architecture
 
-A aplicação segue uma arquitetura moderna baseada no App Router do Next.js:
+The application follows a modern architecture based on Next.js App Router:
 
 ```
 book-fair-manager/
-├── app/                  # Rotas e páginas da aplicação
-│   ├── (portal)/         # Interface administrativa
-│   │   ├── books/        # Gestão de livros
-│   │   ├── cash/         # Controle de caixa
-│   │   ├── dashboard/    # Painel principal
-│   │   ├── relatorios/   # Relatórios
-│   │   ├── transactions/ # Vendas e trocas
-│   │   └── vendas/       # Ponto de venda
+├── app/                  # Application routes and pages
+│   ├── (portal)/         # Administrative interface
+│   │   ├── books/        # Book management
+│   │   ├── cash/         # Cash control
+│   │   ├── dashboard/    # Main dashboard
+│   │   ├── relatorios/   # Reports
+│   │   ├── transactions/ # Sales and exchanges
+│   │   └── vendas/       # Point of sale
 │   ├── api/              # API endpoints
-├── components/           # Componentes React reutilizáveis
-│   ├── ui/               # Componentes de interface básicos
-│   └── terminal/         # Componentes do terminal de consulta
+├── components/           # Reusable React components
+│   ├── ui/               # Basic interface components
+│   └── terminal/         # Query terminal components
 ├── hooks/                # Custom React hooks
-├── lib/                  # Serviços e utilitários
-├── prisma/               # Schema e migrations do banco
-├── public/               # Arquivos estáticos
-└── types/                # Definições de tipos TypeScript
+├── lib/                  # Services and utilities
+├── prisma/               # Database schema and migrations
+├── public/               # Static files
+└── types/                # TypeScript type definitions
 ```
 
-Este projeto implementa:
+This project implements:
 
-- **Clean Architecture** - Separação clara de responsabilidades
-- **Componentes Reutilizáveis** - Design system consistente
-- **Type Safety** - TypeScript em todas as camadas da aplicação
-- **API RESTful** - Endpoints bem definidos para operações CRUD
+- **Clean Architecture** - Clear separation of responsibilities
+- **Reusable Components** - Consistent design system
+- **Type Safety** - TypeScript in all layers of the application
+- **RESTful API** - Well-defined endpoints for CRUD operations
 
-## 🔧 Configuração e Instalação
+## 🔧 Configuration and Installation
 
-### Pré-requisitos
+### Prerequisites
 
-- Node.js 18.x ou superior
-- PostgreSQL 14.x ou superior
-- Docker e Docker Compose (opcional)
+- Node.js 18.x or higher
+- PostgreSQL 14.x or higher
+- Docker and Docker Compose (optional)
 
-### Instalação
+### Installation
 
-1. **Clone o repositório**
+1. **Clone the repository**
 
 ```bash
-git clone https://github.com/seu-usuario/book-fair-manager.git
+git clone https://github.com/your-username/book-fair-manager.git
 cd book-fair-manager
 ```
 
-2. **Instale as dependências**
+2. **Install dependencies**
 
 ```bash
 npm install
-# ou
+# or
 yarn
 ```
 
-3. **Configure as variáveis de ambiente**
+3. **Configure environment variables**
 
-Crie um arquivo `.env` na raiz do projeto:
+Create a `.env` file in the project root:
 
 ```env
 # Database
 DATABASE_URL="postgresql://postgres:postgres@localhost:5432/book_fair"
 ```
 
-4. **Inicie o banco de dados com Docker (opcional)**
+4. **Start the database with Docker (optional)**
 
 ```bash
 docker-compose up -d
 ```
 
-5. **Execute as migrações do Prisma**
+5. **Run Prisma migrations**
 
 ```bash
 npx prisma migrate dev
 ```
 
-6. **Inicie o servidor de desenvolvimento**
+6. **Start the development server**
 
 ```bash
 npm run dev
-# ou
+# or
 yarn dev
 ```
 
-7. **Acesse a aplicação**
+7. **Access the application**
 
-Abra o navegador e acesse `http://localhost:3000`
+Open your browser and access `http://localhost:3000`
 
-### Estrutura do Banco de Dados
+### Database Structure
 
-O sistema utiliza as seguintes tabelas principais:
+The system uses the following main tables:
 
-- `Book` - Catálogo de livros com detalhes e estoque
-- `Transaction` - Registro de vendas e trocas
-- `CashRegister` - Controle de abertura e fechamento de caixa
-- `Payment` - Pagamentos associados às transações
-- `Operator` - Usuários operadores do sistema
-- `CashWithdrawal` - Registro de retiradas de caixa
+- `Book` - Book catalog with details and inventory
+- `Transaction` - Record of sales and exchanges
+- `CashRegister` - Control of cash register opening and closing
+- `Payment` - Payments associated with transactions
+- `Operator` - System operator users
+- `CashWithdrawal` - Record of cash withdrawals
 
-## 📱 Responsividade
+## 📱 Responsiveness
 
-A aplicação foi desenvolvida com design responsivo completo, funcionando perfeitamente em:
+The application was developed with complete responsive design, working perfectly on:
 
 - 💻 Desktops
 - 💻 Laptops
 - 📱 Tablets
 - 📱 Smartphones
 
-## 🌟 Roadmap e Recursos Futuros
+## 🌟 Roadmap and Future Features
 
-Funcionalidades planejadas para as próximas versões:
+Features planned for upcoming versions:
 
-- **Sistema de Autenticação**: Controle de acesso baseado em perfis de usuários
-- **Modo Offline**: Operação sem conexão com sincronização posterior
-- **App Mobile**: Versão nativa para Android e iOS
-- **Integração com E-commerce**: Para vendas online
-- **Múltiplas Unidades**: Suporte para feiras em diferentes locais simultaneamente
+- **Authentication System**: Access control based on user profiles
+- **Offline Mode**: Operation without connection with later synchronization
+- **Mobile App**: Native version for Android and iOS
+- **E-commerce Integration**: For online sales
+- **Multiple Units**: Support for fairs in different locations simultaneously
 
-## 📚 Documentação
+## 📚 Documentation
 
-Documentação detalhada está disponível nos seguintes arquivos:
+Detailed documentation is available in the following files:
 
-- [Funcionalidades](FEATURES.md) - Descrição detalhada dos recursos
+- [Features](FEATURES.md) - Detailed description of features
 
-## 👥 Autor
+## 👥 Author
 
-Desenvolvido por Daniel Moura para a FLE.
+Developed by Daniel Moura for FLE.
