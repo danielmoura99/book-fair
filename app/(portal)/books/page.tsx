@@ -17,6 +17,7 @@ async function getBooks() {
   return books.map((book) => ({
     ...book,
     coverPrice: Number(book.coverPrice),
+    price: Number(book.price),
   }));
 }
 

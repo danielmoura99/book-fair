@@ -29,6 +29,7 @@ async function getTransactions(): Promise<SerializedTransaction[]> {
     book: {
       ...transaction.book,
       coverPrice: Number(transaction.book.coverPrice),
+      price: Number(transaction.book.price),
     },
     paymentMethod: transaction.payments[0]?.method || "",
   }));

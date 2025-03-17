@@ -8,11 +8,13 @@ import { Decimal } from "@prisma/client/runtime/library";
 // Tipos base do Prisma
 export interface Book extends PrismaBook {
   coverPrice: Decimal;
+  price: Decimal;
 }
 
 // Interface para dados serializados (quando os dados vêm do servidor)
-export interface SerializedBook extends Omit<Book, "coverPrice"> {
+export interface SerializedBook extends Omit<Book, "coverPrice" | "price"> {
   coverPrice: number;
+  price: number;
   distributor: string;
 }
 
@@ -23,6 +25,7 @@ export interface BookFormData {
   location: string;
   quantity: number;
   coverPrice: number;
+  price: number;
   title: string;
   author: string;
   medium: string;

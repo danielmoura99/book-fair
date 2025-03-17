@@ -23,7 +23,8 @@ model Book {
   barCode    String?  // Código de Barras (opcional)
   location   String   // Local
   quantity   Int      // Quantidade
-  coverPrice Decimal  @db.Decimal(10, 2) // Preço capa
+  coverPrice Decimal  @db.Decimal(10, 2) 
+  price      Decimal  @db.Decimal(10, 2) @default(0)
   title      String   // Título
   author     String   // Autor
   medium     String   // Médium

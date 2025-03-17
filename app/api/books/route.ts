@@ -29,6 +29,7 @@ export async function POST(request: Request) {
         location: body.location,
         quantity: Number(body.quantity),
         coverPrice: body.coverPrice.toString(),
+        price: body.price.toString(),
         title: body.title,
         author: body.author,
         medium: body.medium,

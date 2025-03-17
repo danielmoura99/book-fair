@@ -26,6 +26,7 @@ const formSchema = z.object({
   location: z.string().min(1, "Local é obrigatório"),
   quantity: z.coerce.number().min(0, "Quantidade deve ser maior ou igual a 0"),
   coverPrice: z.coerce.number().min(0, "Preço deve ser maior ou igual a 0"),
+  price: z.coerce.number().min(0, "Preço deve ser maior ou igual a 0"),
   title: z.string().min(1, "Título é obrigatório"),
   author: z.string().min(1, "Autor é obrigatório"),
   medium: z.string().min(1, "Médium é obrigatório"),
@@ -52,6 +53,7 @@ export function BookForm({ initialData, onSuccess }: BookFormProps) {
         location: initialData.location,
         quantity: initialData.quantity,
         coverPrice: Number(initialData.coverPrice),
+        price: Number(initialData.price),
         title: initialData.title,
         author: initialData.author,
         medium: initialData.medium,
@@ -64,6 +66,7 @@ export function BookForm({ initialData, onSuccess }: BookFormProps) {
         location: "",
         quantity: 0,
         coverPrice: 0,
+        price: 0,
         title: "",
         author: "",
         medium: "",
@@ -82,12 +85,14 @@ export function BookForm({ initialData, onSuccess }: BookFormProps) {
       if (initialData) {
         await axios.patch(`/api/books/${initialData.id}`, {
           ...values,
-          coverPrice: values.coverPrice.toString(), // Convertendo de volta para string para o Prisma
+          coverPrice: values.coverPrice.toString(),
+          price: values.price.toString(), // Convertendo de volta para string para o Prisma
         });
       } else {
         await axios.post("/api/books", {
           ...values,
-          coverPrice: values.coverPrice.toString(), // Convertendo de volta para string para o Prisma
+          coverPrice: values.coverPrice.toString(),
+          price: values.price.toString(), // Convertendo de volta para string para o Prisma
         });
       }
       router.refresh();
@@ -150,6 +155,20 @@ export function BookForm({ initialData, onSuccess }: BookFormProps) {
           <FormField
             control={form.control}
             name="coverPrice"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Preço Feira</FormLabel>
+                <FormControl>
+                  <Input type="number" min="0" step="0.01" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="price"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Preço Capa</FormLabel>

@@ -12,6 +12,7 @@ interface Book {
   codFle: string;
   quantity: number;
   coverPrice: number;
+  price: number;
   title: string;
   publisher?: string;
   distributor?: string;
@@ -68,6 +69,7 @@ export async function POST(req: Request) {
                         increment: book.quantity, // Usa increment para evitar race conditions
                       },
                       coverPrice: book.coverPrice,
+                      price: book.price,
                       title: book.title,
                       publisher: book.publisher || existing.publisher,
                       distributor: book.distributor || existing.distributor,
@@ -86,6 +88,7 @@ export async function POST(req: Request) {
                       title: book.title,
                       quantity: book.quantity,
                       coverPrice: book.coverPrice,
+                      price: book.price,
                       publisher: book.publisher || "",
                       distributor: book.distributor || "",
                       subject: book.subject || "",

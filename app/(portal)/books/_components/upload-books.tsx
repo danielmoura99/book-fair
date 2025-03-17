@@ -23,6 +23,7 @@ interface BookData {
   barCode?: string;
   quantity: number;
   coverPrice: number;
+  price: number;
   title: string;
   publisher: string;
   distributor: string;
@@ -122,6 +123,7 @@ export function UploadBooks() {
         barCode: String(row[1] || "").trim() || undefined,
         quantity: Number(row[2]) || 0,
         coverPrice: normalizePrice(row[3]),
+        price: normalizePrice(row[3]),
         title: String(row[4] || "").trim(),
         publisher: String(row[5] || "").trim(),
         distributor: String(row[6] || "").trim(),

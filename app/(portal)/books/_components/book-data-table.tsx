@@ -78,6 +78,9 @@ export function BookDataTable({ data }: BookDataTableProps) {
                   Quantidade
                 </TableHead>
                 <TableHead className="font-semibold text-black text-right">
+                  Preço Feira
+                </TableHead>
+                <TableHead className="font-semibold text-black text-right">
                   Preço Capa
                 </TableHead>
                 <TableHead className="font-semibold text-black text-right">
@@ -103,6 +106,12 @@ export function BookDataTable({ data }: BookDataTableProps) {
                       style: "currency",
                       currency: "BRL",
                     }).format(Number(book.coverPrice))}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {new Intl.NumberFormat("pt-BR", {
+                      style: "currency",
+                      currency: "BRL",
+                    }).format(Number(book.price))}
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
