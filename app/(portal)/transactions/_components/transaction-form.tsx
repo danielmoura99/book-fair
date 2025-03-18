@@ -29,6 +29,7 @@ import { OperatorSelector } from "./operator-select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PaymentManager } from "./payment-manager";
 import { BarcodeScanner } from "./barcode-scannet";
+import { formatPrice } from "@/lib/utils";
 
 const formSchema = z.object({
   operatorName: z.string().min(1, "Selecione o operador"),
@@ -325,6 +326,60 @@ export function TransactionForm({ onSuccess }: { onSuccess?: () => void }) {
                   onPaymentsChange={setPayments}
                   disabled={loading || !isCashRegisterOpen}
                 />
+
+                {/* Adicionando o novo componente de Resumo de Venda aqui */}
+                <div className="mt-6 pt-4 border-t">
+                  <h3 className="text-lg font-medium mb-3">Resumo da Venda</h3>
+
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Total de Itens:</span>
+                      <span className="font-medium">
+                        {cartItems.reduce(
+                          (sum, item) => sum + item.quantity,
+                          0
+                        )}{" "}
+                        livros
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between text-sm">
+                      <span>Valor Normal:</span>
+                      <span className="font-medium text-red-500 line-through">
+                        {formatPrice(
+                          cartItems.reduce(
+                            (sum, item) =>
+                              sum + Number(item.book.price) * item.quantity,
+                            0
+                          )
+                        )}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between text-sm font-medium">
+                      <span>Valor Feira:</span>
+                      <span className=" text-blue-600">
+                        {formatPrice(totalAmount)}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>Desconto:</span>
+                      <span>
+                        {formatPrice(
+                          cartItems.reduce(
+                            (sum, item) =>
+                              sum +
+                              (Number(item.book.price) -
+                                Number(item.book.coverPrice)) *
+                                item.quantity,
+                            0
+                          )
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                </div>
 
                 <Button
                   type="submit"

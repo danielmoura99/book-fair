@@ -16,7 +16,7 @@ export async function PATCH(
       location: body.location,
       quantity: Number(body.quantity),
       coverPrice: body.coverPrice.toString(), // Convertendo para string para o Decimal
-      price: body.Price.toString(),
+      price: body.price.toString(),
       title: body.title,
       author: body.author,
       medium: body.medium,
