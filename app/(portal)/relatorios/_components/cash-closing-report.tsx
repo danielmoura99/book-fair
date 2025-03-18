@@ -1,3 +1,4 @@
+//app/(portal)/relatorios/_components/cash-closing-report.tsx
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
@@ -16,6 +17,7 @@ import { Card } from "@/components/ui/card";
 import { CashClosingPDF } from "./cash-closing-pdf";
 import { PDFDownloadButton } from "./pdf-download-button";
 import { formatPaymentMethod } from "@/lib/payment-utils";
+import { CashClosingExcelExporter } from "./cash-closing-excel-exporter";
 
 interface PaymentSummary {
   method: string;
@@ -49,6 +51,14 @@ interface Transaction {
   payments: Payment[];
 }
 
+interface Withdrawal {
+  id: string;
+  amount: number;
+  reason: string;
+  operatorName: string;
+  createdAt: string;
+}
+
 interface CashClosingData {
   id: string;
   date: string;
@@ -58,6 +68,7 @@ interface CashClosingData {
   totalWithdrawals: number;
   paymentMethods: PaymentSummary[];
   transactions: Transaction[];
+  withdrawals?: Withdrawal[];
 }
 
 export function CashClosingReport() {
@@ -73,6 +84,10 @@ export function CashClosingReport() {
     return <div>Carregando...</div>;
   }
 
+  if (!closings || closings.length === 0) {
+    return <div>Nenhum fechamento de caixa encontrado.</div>;
+  }
+
   return (
     <div className="space-y-6">
       <h3 className="text-lg font-semibold">
@@ -80,96 +95,105 @@ export function CashClosingReport() {
       </h3>
 
       <ScrollArea className="h-[600px]">
-        {closings?.map((closing) => (
-          <Card key={closing.id} className="p-6 mb-4">
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <h4 className="text-lg font-semibold">
-                  Fechamento - {formatDate(new Date(closing.date))}
-                </h4>
-                <PDFDownloadButton
-                  document={
-                    <CashClosingPDF
-                      closing={closing}
-                      transactions={closing.transactions.sort(
-                        (a, b) =>
-                          new Date(b.transactionDate).getTime() -
-                          new Date(a.transactionDate).getTime()
-                      )}
+        {closings?.map((closing) => {
+          const sortedTransactions = closing.transactions.sort(
+            (a, b) =>
+              new Date(b.transactionDate).getTime() -
+              new Date(a.transactionDate).getTime()
+          );
+
+          return (
+            <Card key={closing.id} className="p-6 mb-4">
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h4 className="text-lg font-semibold">
+                    Fechamento - {formatDate(new Date(closing.date))}
+                  </h4>
+                  <div className="flex">
+                    <PDFDownloadButton
+                      document={
+                        <CashClosingPDF
+                          closing={closing}
+                          transactions={sortedTransactions}
+                        />
+                      }
+                      fileName={`fechamento-${
+                        new Date(closing.date).toISOString().split("T")[0]
+                      }.pdf`}
                     />
-                  }
-                  fileName={`fechamento-${
-                    new Date(closing.date).toISOString().split("T")[0]
-                  }.pdf`}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">Valor Inicial</p>
-                  <p className="text-lg font-semibold">
-                    {formatPrice(closing.initialAmount)}
-                  </p>
+                    <CashClosingExcelExporter closing={closing} />
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Valor Final</p>
-                  <p className="text-lg font-semibold">
-                    {formatPrice(closing.finalAmount)}
-                  </p>
-                </div>
-              </div>
 
-              <div>
-                <h5 className="font-semibold mb-2">
-                  Resumo por Forma de Pagamento
-                </h5>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Método</TableHead>
-                      <TableHead className="text-right">Quantidade</TableHead>
-                      <TableHead className="text-right">Total</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {closing.paymentMethods.map((method) => (
-                      <TableRow key={method.method}>
-                        <TableCell>
-                          {formatPaymentMethod(method.method)}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {method.count}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {formatPrice(method.total)}
-                        </TableCell>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground">
+                      Valor Inicial
+                    </p>
+                    <p className="text-lg font-semibold">
+                      {formatPrice(closing.initialAmount)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Valor Final</p>
+                    <p className="text-lg font-semibold">
+                      {formatPrice(closing.finalAmount)}
+                    </p>
+                  </div>
+                </div>
+
+                <div>
+                  <h5 className="font-semibold mb-2">
+                    Resumo por Forma de Pagamento
+                  </h5>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Método</TableHead>
+                        <TableHead className="text-right">Quantidade</TableHead>
+                        <TableHead className="text-right">Total</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+                    </TableHeader>
+                    <TableBody>
+                      {closing.paymentMethods.map((method) => (
+                        <TableRow key={method.method}>
+                          <TableCell>
+                            {formatPaymentMethod(method.method)}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {method.count}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {formatPrice(method.total)}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
 
-              <div className="grid grid-cols-2 gap-4 pt-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">
-                    Total de Vendas
-                  </p>
-                  <p className="text-lg font-semibold text-green-600">
-                    {formatPrice(closing.totalSales)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">
-                    Total de Retiradas
-                  </p>
-                  <p className="text-lg font-semibold text-red-600">
-                    {formatPrice(closing.totalWithdrawals)}
-                  </p>
+                <div className="grid grid-cols-2 gap-4 pt-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground">
+                      Total de Vendas
+                    </p>
+                    <p className="text-lg font-semibold text-green-600">
+                      {formatPrice(closing.totalSales)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">
+                      Total de Retiradas
+                    </p>
+                    <p className="text-lg font-semibold text-red-600">
+                      {formatPrice(closing.totalWithdrawals)}
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
-          </Card>
-        ))}
+            </Card>
+          );
+        })}
       </ScrollArea>
     </div>
   );

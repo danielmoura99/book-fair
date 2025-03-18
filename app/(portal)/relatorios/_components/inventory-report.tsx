@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { InventoryPDFDownloadButton } from "./inventory-pdf-button";
+import { ExcelDownloadButton } from "./excel-download-button";
 
 interface InventoryBookData {
   codFle: string;
@@ -68,6 +69,15 @@ function InventoryReport() {
     0
   );
 
+  const excelData = booksInventory.map((book) => ({
+    "Código FLE": book.codFle,
+    Título: book.title,
+    Editora: book.publisher,
+    Distribuidor: book.distributor,
+    "Em Estoque": book.quantity,
+    Vendidos: book.quantitySold,
+  }));
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -80,13 +90,21 @@ function InventoryReport() {
             {totalSold} livros
           </p>
         </div>
-        <InventoryPDFDownloadButton
-          data={booksInventory}
-          totalInventory={totalInventory}
-          totalSold={totalSold}
-        />
+        <div className="flex">
+          <InventoryPDFDownloadButton
+            data={booksInventory}
+            totalInventory={totalInventory}
+            totalSold={totalSold}
+          />
+          <ExcelDownloadButton
+            data={excelData}
+            fileName={`relatorio-estoque-${
+              new Date().toISOString().split("T")[0]
+            }`}
+            sheetName="Livros em Estoque"
+          />
+        </div>
       </div>
-
       <ScrollArea className="h-[600px]">
         <Table>
           <TableHeader>

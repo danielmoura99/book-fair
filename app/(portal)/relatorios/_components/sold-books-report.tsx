@@ -14,6 +14,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { formatPrice } from "@/lib/utils";
 import dynamic from "next/dynamic";
+import { ExcelDownloadButton } from "./excel-download-button";
 
 // Import dinâmico do componente PDF
 const PDFDownloadButton = dynamic(
@@ -80,6 +81,15 @@ function SoldBooksReport() {
     0
   );
 
+  // Preparar dados para Excel (formatando os valores monetários)
+  const excelData = soldBooks.map((book) => ({
+    "Código FLE": book.codFle,
+    Título: book.title,
+    Quantidade: book.totalQuantity,
+    "Valor Total": book.totalAmount.toFixed(2),
+    "Preço Médio": book.averagePrice.toFixed(2),
+  }));
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -92,11 +102,20 @@ function SoldBooksReport() {
             {totalQuantidade} livros
           </p>
         </div>
-        <PDFDownloadButton
-          data={soldBooks}
-          totalVendas={totalVendas}
-          totalQuantidade={totalQuantidade}
-        />
+        <div className="flex">
+          <PDFDownloadButton
+            data={soldBooks}
+            totalVendas={totalVendas}
+            totalQuantidade={totalQuantidade}
+          />
+          <ExcelDownloadButton
+            data={excelData}
+            fileName={`relatorio-vendas-${
+              new Date().toISOString().split("T")[0]
+            }`}
+            sheetName="Livros Vendidos"
+          />
+        </div>
       </div>
 
       <ScrollArea className="h-[600px]">

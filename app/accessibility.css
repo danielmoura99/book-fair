@@ -1,0 +1,83 @@
+/* app/accessibility.css */
+
+/* Aumentar o espaçamento entre linhas para melhor legibilidade */
+p,
+li,
+td,
+th,
+input,
+select,
+button,
+label,
+.text-base {
+  line-height: 1.6;
+}
+
+/* Aumentar espaço de clique para elementos interativos */
+button,
+a,
+[role="button"],
+input[type="checkbox"],
+input[type="radio"] {
+  min-height: 44px; /* Tamanho mínimo para área de toque em dispositivos móveis */
+}
+
+/* Melhorar visibilidade de foco */
+*:focus-visible {
+  outline: 3px solid hsl(var(--primary));
+  outline-offset: 2px;
+}
+
+/* Aumentar espaçamento em listas e menus */
+li {
+  margin-bottom: 0.5rem;
+}
+
+ul,
+ol {
+  padding-left: 1.5rem;
+}
+
+/* Aumentar tamanho geral do texto em toda a aplicação */
+html {
+  font-size: 16px; /* Base para cálculo de rem */
+}
+
+@media (max-width: 640px) {
+  html {
+    font-size: 18px; /* Aumentar ainda mais em telas pequenas */
+  }
+
+  input,
+  select,
+  button {
+    min-height: 48px; /* Ainda maior em telas de toque */
+  }
+}
+
+/* Destacar estados de foco e hover */
+a:hover,
+button:hover,
+[role="button"]:hover {
+  transition: all 0.2s ease;
+  filter: brightness(1.1);
+}
+
+/* Aumentar contraste para texto pequeno */
+.text-muted-foreground {
+  color: hsl(
+    var(--foreground) / 0.75
+  ) !important; /* Aumentar contraste de texto secundário */
+}
+
+/* Assegurar que links sejam claramente identificáveis */
+a:not(.no-underline) {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Aumentar tamanho de ícones */
+svg {
+  width: 1.25em;
+  height: 1.25em;
+}

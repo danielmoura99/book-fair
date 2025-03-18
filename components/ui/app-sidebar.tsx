@@ -4,7 +4,6 @@ import {
   BookDown,
   CircleDollarSign,
   Handshake,
-  //Home,
 } from "lucide-react";
 
 import {
@@ -26,12 +25,6 @@ const items = [
     icon: Handshake,
     color: "#0070f3",
   },
-  //{
-  //   title: "Dashboard",
-  //   url: "/dashboard",
-  //   icon: Home,
-  //   color: "#0070f3",
-  // },
   {
     title: "Transações",
     url: "/transactions",
@@ -61,33 +54,36 @@ const items = [
 export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
-      <SidebarGroupLabel className="flex flex-col py-10 text-xl font-bold font-2xl overflow-hidden">
+      <SidebarGroupLabel className="flex flex-col py-10 text-2xl font-bold font-2xl overflow-hidden pl-4">
         <h1 className="text-2xl font-extrabold text-primary">
           Painel de Controle
         </h1>
       </SidebarGroupLabel>
       <SidebarContent>
-        <SidebarGroup>
+        <SidebarGroup className="-mx-3">
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => (
-                <SidebarMenuItem key={item.title} className="mb-4">
+                <SidebarMenuItem key={item.title} className="mb-3">
                   <SidebarMenuButton
                     asChild
-                    className="h-16 text-lg font-medium border-2 rounded-xl shadow-sm hover:shadow transition-all"
+                    className="h-15 text-xl font-medium border-2 rounded-xl shadow-sm hover:shadow transition-all ml-0"
                     style={{
                       borderColor: item.color,
                       backgroundColor: `${item.color}10`, // Cor com baixa opacidade para o fundo
                     }}
                   >
-                    <a href={item.url} className="flex items-center">
+                    <a
+                      href={item.url}
+                      className="flex items-center no-underline"
+                    >
                       <div
-                        className="p-2 rounded-full mr-3"
+                        className="p-3 rounded-full mr-4"
                         style={{ backgroundColor: `${item.color}20` }}
                       >
-                        <item.icon size={24} style={{ color: item.color }} />
+                        <item.icon size={32} style={{ color: item.color }} />
                       </div>
-                      <span className="text-base font-bold">{item.title}</span>
+                      <span className="text-xl font-bold">{item.title}</span>
                     </a>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

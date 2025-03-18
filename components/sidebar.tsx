@@ -7,11 +7,11 @@ import { usePathname } from "next/navigation";
 const Navbar = () => {
   const pathname = usePathname();
   return (
-    <nav className="flex justify-between border-b border-solid px-8 py-4 text-3xl">
+    <nav className="flex justify-between border-b border-solid px-4 py-4 text-3xl">
       {/* ESQUERDA */}
-      <div className="flex items-center gap-10">
-        <Image src="/LogoFLE.png" width={110} height={39} alt="FLE Control" />
-        <Image src="/LogoFLEI.png" width={110} height={39} alt="FLEI Control" />
+      <div className="flex items-center gap-8">
+        <Image src="/LogoFLE.png" width={120} height={39} alt="FLE Control" />
+        <Image src="/LogoFLEI.png" width={120} height={39} alt="FLEI Control" />
 
         <div className="flex flex-col">
           <Link
@@ -24,7 +24,7 @@ const Navbar = () => {
           </Link>
           <span className="text-xl ">31º Feira do Livro Espírita Infantil</span>
         </div>
-        <Image src="/logouse.png" width={110} height={39} alt="FLE Control" />
+        <Image src="/logouse.png" width={120} height={39} alt="FLE Control" />
       </div>
 
       {/* ESQUERDA */}

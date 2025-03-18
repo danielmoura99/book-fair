@@ -5,6 +5,7 @@ import { Mulish } from "next/font/google";
 import "@/app/globals.css";
 import Image from "next/image";
 import { ConsultTable } from "@/components/terminal/consult-table";
+import { serializeDecimalFields } from "@/lib/utils";
 
 const mulish = Mulish({
   subsets: ["latin-ext"],
@@ -12,11 +13,23 @@ const mulish = Mulish({
 
 export default function TerminalPage() {
   const [books, setBooks] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    setLoading(true);
     fetch("/api/books")
       .then((res) => res.json())
-      .then((data) => setBooks(data));
+      .then((data) => {
+        // Garantir que os valores decimais sejam corretamente serializados
+        const serializedData = serializeDecimalFields(data);
+        setBooks(serializedData);
+      })
+      .catch((error) => {
+        console.error("Erro ao carregar livros:", error);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
 
   return (
@@ -58,7 +71,11 @@ export default function TerminalPage() {
 
           {/* Tabela de Consulta */}
           <div className="bg-background rounded-lg">
-            <ConsultTable data={books} />
+            {loading ? (
+              <div className="text-center p-8">Carregando livros...</div>
+            ) : (
+              <ConsultTable data={books} />
+            )}
           </div>
         </div>
 

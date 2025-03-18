@@ -356,13 +356,6 @@ export function TransactionForm({ onSuccess }: { onSuccess?: () => void }) {
                       </span>
                     </div>
 
-                    <div className="flex justify-between text-sm font-medium">
-                      <span>Valor Feira:</span>
-                      <span className=" text-blue-600">
-                        {formatPrice(totalAmount)}
-                      </span>
-                    </div>
-
                     <div className="flex justify-between text-xs text-muted-foreground">
                       <span>Desconto:</span>
                       <span>
@@ -376,6 +369,13 @@ export function TransactionForm({ onSuccess }: { onSuccess?: () => void }) {
                             0
                           )
                         )}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between text-sm font-medium">
+                      <span>Valor Feira:</span>
+                      <span className=" text-blue-600">
+                        {formatPrice(totalAmount)}
                       </span>
                     </div>
                   </div>
