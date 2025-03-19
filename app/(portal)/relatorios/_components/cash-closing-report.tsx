@@ -12,7 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatPrice, formatDate } from "@/lib/utils";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Card } from "@/components/ui/card";
 import { CashClosingPDF } from "./cash-closing-pdf";
 import { PDFDownloadButton } from "./pdf-download-button";
@@ -194,6 +194,7 @@ export function CashClosingReport() {
             </Card>
           );
         })}
+        <ScrollBar orientation="horizontal" />
       </ScrollArea>
     </div>
   );

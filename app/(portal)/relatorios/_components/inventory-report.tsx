@@ -11,7 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { InventoryPDFDownloadButton } from "./inventory-pdf-button";
 import { ExcelDownloadButton } from "./excel-download-button";
 
@@ -132,6 +132,7 @@ function InventoryReport() {
             ))}
           </TableBody>
         </Table>
+        <ScrollBar orientation="horizontal" />
       </ScrollArea>
     </div>
   );

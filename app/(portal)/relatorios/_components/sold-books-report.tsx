@@ -11,7 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { formatPrice } from "@/lib/utils";
 import dynamic from "next/dynamic";
 import { ExcelDownloadButton } from "./excel-download-button";
@@ -147,6 +147,7 @@ function SoldBooksReport() {
             ))}
           </TableBody>
         </Table>
+        <ScrollBar orientation="horizontal" />
       </ScrollArea>
     </div>
   );

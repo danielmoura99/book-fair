@@ -13,7 +13,7 @@ const Navbar = () => {
         <Image src="/LogoFLE.png" width={120} height={39} alt="FLE Control" />
         <Image src="/LogoFLEI.png" width={120} height={39} alt="FLEI Control" />
 
-        <div className="flex flex-col">
+        <div className="flex flex-col gap-0">
           <Link
             href="/"
             className={
@@ -22,7 +22,9 @@ const Navbar = () => {
           >
             54º Feira do Livro Espírita
           </Link>
-          <span className="text-xl ">31º Feira do Livro Espírita Infantil</span>
+          <span className="text-xl -mt-3">
+            31º Feira do Livro Espírita Infantil
+          </span>
         </div>
         <Image src="/logouse.png" width={120} height={39} alt="FLE Control" />
       </div>

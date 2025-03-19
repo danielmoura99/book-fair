@@ -27,15 +27,20 @@ export default async function BooksPage() {
   return (
     <>
       <Navbar />
-      <div className="flex h-full flex-col space-y-6 overflow-hidden p-6">
-        <div className="flex w-full items-center justify-between">
+      {/* Aumentando o espaço disponível para a tabela removendo padding lateral e maximizando largura */}
+      <div className="flex h-full flex-col space-y-6 overflow-hidden px-2 py-6 max-w-full">
+        <div className="flex w-full items-center justify-between px-4">
           <h2 className="text-2xl font-bold">Livros</h2>
           <div className="flex items-center gap-4">
             <UploadBooks />
             <AddBookButton />
           </div>
         </div>
-        <BookDataTable data={books} />
+        <div className="px-1">
+          {" "}
+          {/* Reduzido padding horizontal */}
+          <BookDataTable data={books} />
+        </div>
       </div>
     </>
   );

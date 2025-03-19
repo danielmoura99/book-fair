@@ -5,7 +5,7 @@ import Navbar from "@/components/sidebar";
 import { TransactionDataTable } from "./_components/transaction-data-table";
 import { prisma } from "@/lib/prisma";
 import { AddTransactionButton } from "./_components/add-transaction-button";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { SerializedTransaction } from "@/types";
 
 async function getTransactions(): Promise<SerializedTransaction[]> {
@@ -48,6 +48,7 @@ export default async function TransactionsPage() {
         </div>
         <ScrollArea className="flex-1 p-6 pt-0">
           <TransactionDataTable data={transactions} />
+          <ScrollBar orientation="horizontal" />
         </ScrollArea>
       </div>
     </>

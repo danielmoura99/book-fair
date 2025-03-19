@@ -4,6 +4,7 @@ import { formatMoney } from "@/lib/utils";
 import { Transaction, Book } from "@prisma/client";
 import { ScrollArea } from "@radix-ui/react-scroll-area";
 import { SerializedTransaction } from "@/types";
+import { ScrollBar } from "@/components/ui/scroll-area";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 interface TransactionWithBook extends Transaction {
@@ -50,6 +51,7 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
           </div>
         ))}
       </div>
+      <ScrollBar orientation="horizontal" />
     </ScrollArea>
   );
 }

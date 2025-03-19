@@ -10,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { SerializedBook } from "@/types";
@@ -104,7 +104,7 @@ export function ConsultTable({ data }: ConsultTableProps) {
             currency: "BRL",
           }).format(discountAmount)}
         </div>
-        <div className="text-sm text-green-500">
+        <div className="text-xs text-green-500">
           ({discountPercent.toFixed(0)}% de desconto)
         </div>
       </div>
@@ -113,7 +113,7 @@ export function ConsultTable({ data }: ConsultTableProps) {
 
   return (
     <div className="space-y-8">
-      {/* Barra de Busca Melhorada */}
+      {/* Barra de Busca */}
       <div className="max-w-3xl mx-auto">
         <div className="relative">
           <div className="relative flex items-center h-16 rounded-full border-2 shadow-sm hover:shadow-md focus-within:shadow-md">
@@ -132,97 +132,102 @@ export function ConsultTable({ data }: ConsultTableProps) {
         </div>
       </div>
 
-      {/* Tabela de Resultados com Maior Contraste */}
+      {/* Tabela de Resultados com Cabeçalhos Maiores */}
       <div className="rounded-lg border-2">
-        <ScrollArea className="h-[calc(100vh-400px)]">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-gray-100">
-                <TableHead className="font-bold text-xl text-black py-6">
-                  Código FLE
-                </TableHead>
-                <TableHead className="font-bold text-xl text-black py-6">
-                  Local
-                </TableHead>
-                <TableHead className="font-bold text-xl text-black py-6">
-                  Título
-                </TableHead>
-                <TableHead className="font-bold text-xl text-black py-6">
-                  Autor
-                </TableHead>
-                <TableHead className="font-bold text-xl text-black py-6">
-                  Médium
-                </TableHead>
-                <TableHead className="font-bold text-xl text-black py-6">
-                  Editora
-                </TableHead>
-                <TableHead className="font-bold text-xl text-black py-6">
-                  Assunto
-                </TableHead>
-                <TableHead className="font-bold text-xl text-black text-right py-6">
-                  Qtd.
-                </TableHead>
-                <TableHead className="font-bold text-xl text-black text-right py-6">
-                  Preço Normal
-                </TableHead>
-                <TableHead className="font-bold text-xl text-black text-right py-6">
-                  Preço Feira
-                </TableHead>
-                <TableHead className="font-bold text-xl text-black text-right py-6">
-                  Economia
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredBooks.map((book, index) => (
-                <TableRow
-                  key={book.id}
-                  className={`
-                    text-lg hover:bg-blue-50 
-                    ${index % 2 === 0 ? "bg-white" : "bg-gray-50"}
-                  `}
-                >
-                  <TableCell className="py-4 text-lg">{book.codFle}</TableCell>
-                  <TableCell className="py-4 text-lg">
-                    {book.location}
-                  </TableCell>
-                  <TableCell className="py-4 text-lg font-medium">
-                    {book.title}
-                  </TableCell>
-                  <TableCell className="py-4 text-lg">{book.author}</TableCell>
-                  <TableCell className="py-4 text-lg">{book.medium}</TableCell>
-                  <TableCell className="py-4 text-lg">
-                    {book.publisher}
-                  </TableCell>
-                  <TableCell className="py-4 text-lg">{book.subject}</TableCell>
-                  <TableCell className="py-4 text-lg text-right">
-                    {book.quantity}
-                  </TableCell>
-                  <TableCell className="py-4 text-lg text-right font-medium text-gray-600">
-                    {Number(book.price) > 0
-                      ? new Intl.NumberFormat("pt-BR", {
+        {/* Container com scroll horizontal */}
+        <div className="overflow-x-auto" style={{ width: "100%" }}>
+          {/* ScrollArea para scroll vertical */}
+          <ScrollArea className="h-[calc(100vh-400px)]">
+            <div className="min-w-[1100px]">
+              {" "}
+              {/* Largura mínima para garantir que todas as colunas sejam visíveis */}
+              <Table className="w-full">
+                <TableHeader>
+                  <TableRow className="bg-gray-100">
+                    <TableHead className="font-bold text-xl text-black py-4 w-24">
+                      Código FLE
+                    </TableHead>
+                    <TableHead className="font-bold text-xl text-black py-4 w-28">
+                      Local
+                    </TableHead>
+                    <TableHead className="font-bold text-xl text-black py-4 w-64">
+                      Título
+                    </TableHead>
+                    <TableHead className="font-bold text-xl text-black py-4 w-40">
+                      Autor
+                    </TableHead>
+                    <TableHead className="font-bold text-xl text-black py-4 w-40">
+                      Médium
+                    </TableHead>
+                    <TableHead className="font-bold text-xl text-black py-4 w-40">
+                      Editora
+                    </TableHead>
+                    <TableHead className="font-bold text-xl text-black py-4 w-40">
+                      Assunto
+                    </TableHead>
+                    <TableHead className="font-bold text-xl text-black text-right py-4 w-20">
+                      Qtd.
+                    </TableHead>
+                    <TableHead className="font-bold text-xl text-black text-right py-4 w-32">
+                      Preço Normal
+                    </TableHead>
+                    <TableHead className="font-bold text-xl text-black text-right py-4 w-32">
+                      Preço Feira
+                    </TableHead>
+                    <TableHead className="font-bold text-xl text-black text-right py-4 w-32">
+                      Economia
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredBooks.map((book, index) => (
+                    <TableRow
+                      key={book.id}
+                      className={`
+                        text-base hover:bg-blue-50 
+                        ${index % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                      `}
+                    >
+                      <TableCell className="py-3">{book.codFle}</TableCell>
+                      <TableCell className="py-3">{book.location}</TableCell>
+                      <TableCell className="py-3 font-medium">
+                        {book.title}
+                      </TableCell>
+                      <TableCell className="py-3">{book.author}</TableCell>
+                      <TableCell className="py-3">{book.medium}</TableCell>
+                      <TableCell className="py-3">{book.publisher}</TableCell>
+                      <TableCell className="py-3">{book.subject}</TableCell>
+                      <TableCell className="py-3 text-right">
+                        {book.quantity}
+                      </TableCell>
+                      <TableCell className="py-3 text-right font-medium text-gray-600">
+                        {Number(book.price) > 0
+                          ? new Intl.NumberFormat("pt-BR", {
+                              style: "currency",
+                              currency: "BRL",
+                            }).format(Number(book.price))
+                          : "Não informado"}
+                      </TableCell>
+                      <TableCell className="py-3 text-right font-medium text-blue-600">
+                        {new Intl.NumberFormat("pt-BR", {
                           style: "currency",
                           currency: "BRL",
-                        }).format(Number(book.price))
-                      : "Não informado"}
-                  </TableCell>
-                  <TableCell className="py-4 text-lg text-right font-medium text-blue-600">
-                    {new Intl.NumberFormat("pt-BR", {
-                      style: "currency",
-                      currency: "BRL",
-                    }).format(Number(book.coverPrice))}
-                  </TableCell>
-                  <TableCell className="py-4 text-lg text-right">
-                    {calculateDiscount(
-                      Number(book.price),
-                      Number(book.coverPrice)
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </ScrollArea>
+                        }).format(Number(book.coverPrice))}
+                      </TableCell>
+                      <TableCell className="py-3 text-right">
+                        {calculateDiscount(
+                          Number(book.price),
+                          Number(book.coverPrice)
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+            <ScrollBar orientation="horizontal" />
+          </ScrollArea>
+        </div>
       </div>
 
       {/* Contador de Resultados */}
@@ -230,6 +235,13 @@ export function ConsultTable({ data }: ConsultTableProps) {
         {filteredBooks.length === data.length
           ? `Total de ${data.length} livros disponíveis`
           : `Encontrados ${filteredBooks.length} livros`}
+      </div>
+
+      {/* Instrução de rolagem horizontal para usuários menos experientes */}
+      <div className="text-center text-sm text-muted-foreground">
+        <p>
+          Role a tabela para a direita ou esquerda para ver mais informações
+        </p>
       </div>
     </div>
   );

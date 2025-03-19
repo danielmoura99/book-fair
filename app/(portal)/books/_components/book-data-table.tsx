@@ -14,7 +14,7 @@ import { EditBookButton } from "./edit-book-button";
 import { DeleteBookButton } from "./delete-book-button";
 import { SerializedBook } from "@/types";
 import { SearchBar } from "./search-bar";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 interface BookDataTableProps {
   data: SerializedBook[];
@@ -51,7 +51,7 @@ export function BookDataTable({ data }: BookDataTableProps) {
                   Código FLE
                 </TableHead>
                 <TableHead className="font-semibold text-black">
-                  Código Barras
+                  Cód. Barras
                 </TableHead>
                 <TableHead className="font-semibold text-black">
                   Local
@@ -69,13 +69,13 @@ export function BookDataTable({ data }: BookDataTableProps) {
                   Editora
                 </TableHead>
                 <TableHead className="font-semibold text-black">
-                  Distribuidor
+                  Distr.
                 </TableHead>
                 <TableHead className="font-semibold text-black">
                   Assunto
                 </TableHead>
                 <TableHead className="font-semibold text-black text-right">
-                  Quantidade
+                  Quant.
                 </TableHead>
                 <TableHead className="font-semibold text-black text-right">
                   Preço Feira
@@ -123,6 +123,7 @@ export function BookDataTable({ data }: BookDataTableProps) {
               ))}
             </TableBody>
           </Table>
+          <ScrollBar orientation="horizontal" />
         </ScrollArea>
       </div>
     </div>
