@@ -23,8 +23,8 @@ model Book {
   barCode    String?  // Código de Barras (opcional)
   location   String   // Local
   quantity   Int      // Quantidade
-  coverPrice Decimal  @db.Decimal(10, 2) 
-  price      Decimal  @db.Decimal(10, 2) @default(0)
+  coverPrice Decimal  @db.Decimal(10, 2) // preço feira
+  price      Decimal  @db.Decimal(10, 2) @default(0) // preço capa
   title      String   // Título
   author     String   // Autor
   medium     String   // Médium
@@ -100,3 +100,33 @@ model Payment {
   createdAt     DateTime @default(now())
 }
 
+model InventoryBook {
+  id           String       @id @default(cuid())
+  codFle       String       @unique // Código FLE
+  barCode      String?      // Código de Barras (opcional)
+  location     String       // Local
+  quantity     Int          // Quantidade
+  coverPrice   Decimal      @db.Decimal(10, 2) //preco feira
+  price        Decimal      @db.Decimal(10, 2) @default(0) // preco capa
+  title        String       // Título
+  author       String       // Autor
+  medium       String       // Médium
+  publisher    String       // Editora
+  distributor  String       // Distribuidora
+  subject      String       // Assunto
+  batchName    String       // Nome do lote/editora (ex: "DEVL FEB")
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  entries      InventoryEntry[]
+}
+
+model InventoryEntry {
+  id           String       @id @default(cuid())
+  inventoryBookId String
+  inventoryBook InventoryBook @relation(fields: [inventoryBookId], references: [id])
+  barcodeUsed   String?     // Código de barras que foi usado na leitura
+  quantity      Int         // Quantidade adicionada nesta entrada
+  batchName     String      // Nome do lote/entrada
+  createdAt     DateTime    @default(now())
+  createdBy     String?     // Nome do operador
+}
