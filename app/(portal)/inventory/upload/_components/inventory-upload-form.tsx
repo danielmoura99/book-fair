@@ -1,384 +1,421 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 //app/(portal)/inventory/upload/_components/inventory-upload-form.tsx
 "use client";
 
-import { useState, useRef } from "react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardFooter,
-} from "@/components/ui/card";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Upload } from "lucide-react";
+import * as XLSX from "xlsx";
+
 import { Progress } from "@/components/ui/progress";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { useToast } from "@/hooks/use-toast";
-import {
-  FileUp,
-  AlertTriangle,
-  CheckCircle,
-  Loader2,
-  HelpCircle,
-  ArrowRight,
-  RefreshCw,
-} from "lucide-react";
 import axios from "axios";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import Link from "next/link";
-import { InventoryTemplateDownloader } from "./inventory-template-downloader";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useToast } from "@/hooks/use-toast";
 
-// Lista comum de editoras
-const COMMON_PUBLISHERS = [
-  "DEVL FEB", // FEB
-  "DEVL BOA NOVA", // Boa Nova
-  "DEVL EME", // EME
-  "DEVL PETIT", // Petit
-  "DEVL LEAL", // Leal
-  "DEVL IDE", // IDE
-  "DEVL INTELITERA", // Intelitera
-  "DEVL CEAC", // CEAC
-  "OUTROS", // Outros
-];
+interface InventoryItem {
+  codFle: string;
+  barCode?: string;
+  quantity: number;
+  coverPrice: number;
+  price: number;
+  title: string;
+  author: string;
+  medium: string;
+  publisher: string;
+  distributor: string;
+  subject: string;
+  location: string;
+}
+
+interface ProcessingStatus {
+  totalRows: number;
+  processedRows: number;
+  validRows: number;
+  invalidRows: number;
+  totalBatches: number;
+  currentBatch: number;
+  batchSize: number;
+  batchProcessed: number;
+  errors: string[];
+  logs: string[];
+}
 
 export function InventoryUploadForm() {
-  const [file, setFile] = useState<File | null>(null);
-  const [uploading, setUploading] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
-  const [batchName, setBatchName] = useState("");
-  const [customBatch, setCustomBatch] = useState("");
-  const [batchType, setBatchType] = useState<"common" | "custom">("common");
-  const [results, setResults] = useState<{
-    success?: number;
-    errors?: number;
-    created?: number;
-    updated?: number;
-  } | null>(null);
+  const [showDialog, setShowDialog] = useState(false);
+  const [processingStatus, setProcessingStatus] = useState<ProcessingStatus>({
+    totalRows: 0,
+    processedRows: 0,
+    validRows: 0,
+    invalidRows: 0,
+    totalBatches: 0,
+    currentBatch: 0,
+    batchSize: 25,
+    batchProcessed: 0,
+    errors: [],
+    logs: [],
+  });
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
-    if (selectedFile) {
-      // Verificar se é um arquivo Excel
-      if (
-        !selectedFile.name.endsWith(".xlsx") &&
-        !selectedFile.name.endsWith(".xls")
-      ) {
-        setError("Por favor, selecione um arquivo Excel (.xlsx ou .xls)");
-        return;
-      }
-
-      setFile(selectedFile);
-      setError(null);
-    }
-  };
-
-  const handleUpload = async () => {
-    if (!file) {
-      setError("Por favor, selecione um arquivo para upload");
-      return;
-    }
-
-    const effectiveBatchName = batchType === "common" ? batchName : customBatch;
-
-    if (!effectiveBatchName) {
-      setError("Por favor, selecione ou digite um nome de lote");
-      return;
-    }
-
-    try {
-      setUploading(true);
-      setProgress(10);
-      setError(null);
-      setSuccess(false);
-      setResults(null);
-
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("batchName", effectiveBatchName);
-
-      // Enviar o arquivo
-      const response = await axios.post(
-        "/api/inventory/batch/upload",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-          onUploadProgress: (progressEvent) => {
-            if (progressEvent.total) {
-              const percentCompleted = Math.round(
-                (progressEvent.loaded * 100) / progressEvent.total
-              );
-              setProgress(10 + percentCompleted * 0.3); // 10-40%
-            }
-          },
-        }
-      );
-
-      // Processamento do arquivo
-      setProgress(70);
-
-      // Finalização
-      setProgress(100);
-      setSuccess(true);
-      setResults(response.data.results);
-
-      toast({
-        title: "Upload concluído",
-        description: `${response.data.results.success} livros foram importados com sucesso.`,
-      });
-    } catch (error) {
-      console.error("Erro ao fazer upload:", error);
-
-      if (axios.isAxiosError(error)) {
-        setError(
-          error.response?.data?.message || "Erro ao fazer o upload do arquivo."
-        );
-      } else {
-        setError("Erro desconhecido ao fazer o upload do arquivo.");
-      }
-
-      setProgress(0);
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const resetForm = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-    setFile(null);
-    setBatchName("");
-    setCustomBatch("");
-    setError(null);
-    setSuccess(false);
-    setResults(null);
+  const resetStatus = () => {
+    setProcessingStatus({
+      totalRows: 0,
+      processedRows: 0,
+      validRows: 0,
+      invalidRows: 0,
+      totalBatches: 0,
+      currentBatch: 0,
+      batchSize: 25,
+      batchProcessed: 0,
+      errors: [],
+      logs: [],
+    });
     setProgress(0);
   };
 
+  const normalizePrice = (price: string | number): number => {
+    if (!price) return 0;
+
+    let priceStr = String(price);
+
+    // Remove R$, espaços e converte vírgula para ponto
+    priceStr = priceStr.replace(/[R$\s]/g, "").replace(",", ".");
+
+    // Remove qualquer caractere que não seja número ou ponto
+    priceStr = priceStr.replace(/[^\d.]/g, "");
+
+    const value = Number(priceStr);
+    return isNaN(value) ? 0 : value;
+  };
+
+  const processExcelFile = async (file: File) => {
+    try {
+      setIsUploading(true);
+      setShowDialog(true);
+      resetStatus();
+      setProgress(10);
+
+      const buffer = await file.arrayBuffer();
+      const workbook = XLSX.read(buffer, { type: "array" });
+      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+
+      const rows = XLSX.utils.sheet_to_json(worksheet, {
+        raw: false,
+        defval: "",
+        header: 1,
+      }) as any[];
+
+      // Remove a primeira linha (cabeçalhos)
+      rows.shift();
+
+      setProgress(30);
+
+      // Mapear colunas do Excel para nosso formato conforme a estrutura real do arquivo
+      let inventoryItems: InventoryItem[] = rows.map((row: any) => ({
+        codFle: String(row[0] || "").trim(), // Código FLE
+        barCode: String(row[1] || "").trim() || undefined, // cod barras
+        location: String(row[2] || "").trim() || "ESTOQUE", // Local
+        quantity: Number(row[3]) || 0, // quantidade
+        coverPrice: normalizePrice(row[4]), // Preco Feira
+        price: normalizePrice(row[5]), // Preco capa
+        title: String(row[6] || "").trim(), // Título
+        author: String(row[7] || "").trim(), // Autor
+        medium: String(row[8] || "").trim(), // Médium
+        publisher: String(row[9] || "").trim(), // Editora 2024
+        distributor: String(row[10] || "").trim(), // Distribuidor
+        subject: String(row[11] || "").trim(), // Assunto
+      }));
+
+      setProgress(50);
+
+      // Validar dados obrigatórios com melhor feedback
+      const invalidItems: {
+        rowNumber: number; // +2 porque removemos a linha de cabeçalho e os índices começam em 0
+        issues: string;
+        codFle: string;
+        barCode?: string;
+        quantity: number;
+        coverPrice: number;
+        price: number;
+        title: string;
+        author: string;
+        medium: string;
+        publisher: string;
+        distributor: string;
+        subject: string;
+        location: string;
+      }[] = [];
+      const validItems = [];
+
+      // Verificar item por item e registrar problemas específicos
+      for (let i = 0; i < inventoryItems.length; i++) {
+        const item = inventoryItems[i];
+        const issues = [];
+
+        if (!item.codFle) issues.push("código FLE ausente");
+        if (!item.title) issues.push("título ausente");
+        if (item.coverPrice <= 0) issues.push("preço de feira inválido");
+        if (item.price <= 0) issues.push("preço de capa inválido");
+
+        if (issues.length > 0) {
+          invalidItems.push({
+            ...item,
+            rowNumber: i + 2, // +2 porque removemos a linha de cabeçalho e os índices começam em 0
+            issues: issues.join(", "),
+          });
+        } else {
+          validItems.push(item);
+        }
+      }
+
+      // Analisar e mostrar os primeiros 5 itens inválidos para diagnóstico
+      if (invalidItems.length > 0) {
+        console.log("Exemplos de itens inválidos:", invalidItems.slice(0, 5));
+
+        if (validItems.length === 0) {
+          throw new Error(
+            `Todos os ${invalidItems.length} itens possuem dados inválidos. Verifique se o formato do arquivo está correto e se as colunas estão na ordem esperada.`
+          );
+        }
+
+        // Continuar com os itens válidos, mas registrar os inválidos
+        setProcessingStatus((prev) => ({
+          ...prev,
+          logs: [
+            ...prev.logs,
+            `Atenção: ${invalidItems.length} itens com dados inválidos foram ignorados.`,
+            `Continuando com ${validItems.length} itens válidos.`,
+            `Exemplos de problemas: ${invalidItems
+              .slice(0, 3)
+              .map(
+                (item) =>
+                  `Linha ${item.rowNumber}: ${item.codFle || "sem código"} - ${
+                    item.issues
+                  }`
+              )
+              .join("; ")}`,
+          ],
+          invalidRows: invalidItems.length,
+        }));
+
+        // Substituir os itens do inventário pelos válidos para continuar o processamento
+        inventoryItems = validItems;
+      }
+
+      setProcessingStatus((prev) => ({
+        ...prev,
+        totalRows: inventoryItems.length,
+        totalBatches: Math.ceil(inventoryItems.length / 25),
+        batchSize: 25,
+      }));
+
+      // Enviar para API em lotes
+      for (let i = 0; i < inventoryItems.length; i += 25) {
+        const batch = inventoryItems.slice(i, i + 25);
+        const currentBatch = Math.floor(i / 25) + 1;
+
+        setProcessingStatus((prev) => ({
+          ...prev,
+          currentBatch,
+          logs: [
+            ...prev.logs,
+            `Processando lote ${currentBatch} de ${prev.totalBatches}...`,
+          ],
+        }));
+
+        try {
+          const response = await axios.post("/api/inventory/batch/upload", {
+            items: batch,
+          });
+
+          setProcessingStatus((prev) => ({
+            ...prev,
+            validRows: prev.validRows + response.data.results.success.length,
+            processedRows: prev.processedRows + batch.length,
+            batchProcessed: response.data.results.success.length,
+            logs: [
+              ...prev.logs,
+              `Lote ${currentBatch} processado com sucesso: ${response.data.results.success.length} itens`,
+            ],
+          }));
+
+          if (response.data.results.errors.length > 0) {
+            setProcessingStatus((prev) => ({
+              ...prev,
+              invalidRows:
+                prev.invalidRows + response.data.results.errors.length,
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              errors: [
+                ...prev.errors,
+                ...response.data.results.errors.map(
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  (e: any) => `Erro no item ${e.item}: ${e.error}`
+                ),
+              ],
+            }));
+          }
+
+          setProgress(
+            50 + (currentBatch / Math.ceil(inventoryItems.length / 25)) * 50
+          );
+        } catch (error) {
+          console.error("Erro ao processar lote:", error);
+          setProcessingStatus((prev) => ({
+            ...prev,
+            invalidRows: prev.invalidRows + batch.length,
+            errors: [
+              ...prev.errors,
+              `Erro ao processar lote ${currentBatch}: ${
+                error instanceof Error ? error.message : "Erro desconhecido"
+              }`,
+            ],
+            logs: [...prev.logs, `Erro ao processar lote ${currentBatch}`],
+          }));
+        }
+      }
+
+      if (processingStatus.validRows > 0) {
+        toast({
+          title: "Sucesso!",
+          description: `${processingStatus.validRows} itens de inventário importados com sucesso.`,
+        });
+      }
+    } catch (error) {
+      console.error("Erro ao processar arquivo:", error);
+      setProcessingStatus((prev) => ({
+        ...prev,
+        errors: [
+          ...prev.errors,
+          error instanceof Error ? error.message : "Erro desconhecido",
+        ],
+      }));
+      toast({
+        variant: "destructive",
+        title: "Erro ao importar inventário",
+        description:
+          error instanceof Error ? error.message : "Erro desconhecido",
+      });
+    } finally {
+      setProgress(100);
+    }
+  };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.name.endsWith(".xlsx")) {
+      toast({
+        variant: "destructive",
+        title: "Arquivo inválido",
+        description: "Por favor, selecione um arquivo Excel (.xlsx)",
+      });
+      return;
+    }
+
+    processExcelFile(file);
+  };
+
+  const handleClose = () => {
+    setShowDialog(false);
+    setIsUploading(false);
+    resetStatus();
+  };
+
   return (
-    <Card className="max-w-3xl mx-auto">
-      <CardHeader>
-        <CardTitle>Upload de Arquivo Excel para Inventário</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {error && (
-          <Alert variant="destructive">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertTitle>Erro</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
+    <>
+      <div className="flex items-center gap-4">
+        <Button
+          onClick={() => document.getElementById("inventory-upload")?.click()}
+          disabled={isUploading}
+          variant="outline"
+        >
+          <Upload className="mr-2 h-4 w-4" />
+          Importar Inventário
+        </Button>
+        <input
+          id="inventory-upload"
+          type="file"
+          accept=".xlsx"
+          className="hidden"
+          onChange={handleFileUpload}
+          disabled={isUploading}
+        />
+      </div>
 
-        {success && (
-          <Alert className="bg-green-50 border-green-200">
-            <CheckCircle className="h-4 w-4 text-green-600" />
-            <AlertTitle className="text-green-800">Sucesso</AlertTitle>
-            <AlertDescription className="text-green-700">
-              O arquivo foi processado com sucesso!
-              {results && (
-                <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
-                  <div>
-                    Total processado: <strong>{results.success}</strong>
-                  </div>
-                  <div>
-                    Erros: <strong>{results.errors}</strong>
-                  </div>
-                  <div>
-                    Livros criados: <strong>{results.created}</strong>
-                  </div>
-                  <div>
-                    Livros atualizados: <strong>{results.updated}</strong>
-                  </div>
-                </div>
-              )}
-            </AlertDescription>
-          </Alert>
-        )}
+      <Dialog open={showDialog} onOpenChange={handleClose}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Processando Inventário</DialogTitle>
+            <DialogDescription>
+              Aguarde enquanto processamos seu arquivo...
+            </DialogDescription>
+          </DialogHeader>
 
-        <div className="space-y-2">
-          <div className="flex justify-between items-center">
-            <Label htmlFor="batch-type">Lote</Label>
-            <div className="flex space-x-2">
-              <Button
-                variant={batchType === "common" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setBatchType("common")}
-                disabled={uploading}
-              >
-                Lotes Comuns
-              </Button>
-              <Button
-                variant={batchType === "custom" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setBatchType("custom")}
-                disabled={uploading}
-              >
-                Lote Personalizado
-              </Button>
-            </div>
-          </div>
-
-          {batchType === "common" ? (
-            <Select
-              value={batchName}
-              onValueChange={setBatchName}
-              disabled={uploading}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione um lote" />
-              </SelectTrigger>
-              <SelectContent>
-                {COMMON_PUBLISHERS.map((publisher) => (
-                  <SelectItem key={publisher} value={publisher}>
-                    {publisher}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          ) : (
-            <Input
-              value={customBatch}
-              onChange={(e) => setCustomBatch(e.target.value.toUpperCase())}
-              placeholder="Ex: DEVL ESPECIAL"
-              disabled={uploading}
-            />
-          )}
-
-          <div className="text-xs text-muted-foreground flex items-center">
-            <HelpCircle className="h-3 w-3 mr-1" />
-            {batchType === "custom"
-              ? "Recomendamos usar o prefixo 'DEVL' para manter o padrão"
-              : "Selecione a editora correspondente ao lote"}
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <div className="flex justify-between items-start">
-            <Label htmlFor="file">Arquivo Excel</Label>
-            <InventoryTemplateDownloader />
-          </div>
-          <Input
-            id="file"
-            type="file"
-            onChange={handleFileChange}
-            accept=".xlsx,.xls"
-            ref={fileInputRef}
-            disabled={uploading}
-          />
-          <div className="text-xs text-muted-foreground space-y-1">
-            <p>
-              Selecione um arquivo Excel (.xlsx ou .xls) contendo os dados dos
-              livros.
-            </p>
-            <p className="font-medium">
-              O arquivo deve ter as colunas na seguinte ordem:
-            </p>
-            <ol className="list-decimal pl-5 space-y-1">
-              <li>
-                <span className="font-medium">Código FLE</span>: Código único do
-                livro (obrigatório)
-              </li>
-              <li>
-                <span className="font-medium">Código de Barras</span>: Código de
-                barras EAN do livro
-              </li>
-              <li>
-                <span className="font-medium">Local</span>: Localização do livro
-                no evento
-              </li>
-              <li>
-                <span className="font-medium">Quantidade</span>: Quantidade
-                inicial
-              </li>
-              <li>
-                <span className="font-medium">Preço Feira</span>: Preço do livro
-                na feira
-              </li>
-              <li>
-                <span className="font-medium">Preço Capa</span>: Preço de capa
-                do livro
-              </li>
-              <li>
-                <span className="font-medium">Título</span>: Nome do livro
-              </li>
-              <li>
-                <span className="font-medium">Autor</span>: Autor do livro
-              </li>
-              <li>
-                <span className="font-medium">Médium</span>: Nome do médium
-              </li>
-              <li>
-                <span className="font-medium">Editora</span>: Nome da editora
-              </li>
-              <li>
-                <span className="font-medium">Distribuidor</span>: Nome do
-                distribuidor/fornecedor
-              </li>
-              <li>
-                <span className="font-medium">Assunto</span>: Categoria do livro
-              </li>
-            </ol>
-          </div>
-        </div>
-
-        {uploading && (
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span>Progresso</span>
-              <span>{progress}%</span>
-            </div>
+          <div className="space-y-4">
             <Progress value={progress} />
-          </div>
-        )}
-      </CardContent>
-      <CardFooter className="flex flex-col gap-4">
-        {success ? (
-          <div className="flex flex-col w-full gap-4">
-            <Button onClick={resetForm} className="w-full">
-              <RefreshCw className="mr-2 h-4 w-4" />
-              Novo Upload
-            </Button>
-            <Link href="/inventory" className="w-full">
-              <Button variant="outline" className="w-full">
-                Ir para Inventário
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </Link>
-          </div>
-        ) : (
-          <Button
-            onClick={handleUpload}
-            disabled={!file || uploading || (!batchName && !customBatch)}
-            className="w-full"
-          >
-            {uploading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Processando...
-              </>
-            ) : (
-              <>
-                <FileUp className="mr-2 h-4 w-4" />
-                Enviar Arquivo
-              </>
+
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>Total de linhas: {processingStatus.totalRows}</div>
+              <div>Processadas: {processingStatus.processedRows}</div>
+              <div className="text-green-600">
+                Válidas: {processingStatus.validRows}
+              </div>
+              <div className="text-red-600">
+                Inválidas: {processingStatus.invalidRows}
+              </div>
+            </div>
+
+            {processingStatus.totalBatches > 0 && (
+              <div className="rounded-md bg-muted p-4">
+                <h4 className="mb-2 text-sm font-medium">
+                  Dividido em {processingStatus.totalBatches} lotes de{" "}
+                  {processingStatus.batchSize} itens
+                </h4>
+                <div className="max-h-32 space-y-1 overflow-auto text-sm text-muted-foreground">
+                  {processingStatus.logs.map((log, index) => (
+                    <div key={index}>{log}</div>
+                  ))}
+                </div>
+              </div>
             )}
-          </Button>
-        )}
-      </CardFooter>
-    </Card>
+
+            {processingStatus.errors.length > 0 && (
+              <Alert variant="destructive">
+                <AlertTitle>Erros encontrados</AlertTitle>
+                <AlertDescription>
+                  <div className="mt-2 max-h-40 overflow-auto text-sm">
+                    {processingStatus.errors.map((error, index) => (
+                      <div key={index} className="mb-1">
+                        {error}
+                      </div>
+                    ))}
+                  </div>
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {processingStatus.validRows > 0 && progress === 100 && (
+              <Alert>
+                <AlertTitle>Processamento concluído</AlertTitle>
+                <AlertDescription>
+                  {processingStatus.validRows} itens de inventário foram
+                  importados com sucesso.
+                </AlertDescription>
+              </Alert>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
