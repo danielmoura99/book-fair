@@ -5,7 +5,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import axios from "axios";
 
-interface Book {
+interface InventoryBook {
   id: string;
   codFle: string;
   barCode?: string;
@@ -23,14 +23,12 @@ interface Book {
 
 interface InventoryItem {
   bookId: string;
-  book: Book;
+  book: InventoryBook;
   quantity: number;
   barcodeUsed: string;
 }
 
 interface InventoryContextType {
-  currentBatch: string;
-  setCurrentBatch: (batch: string) => void;
   inventoryItems: InventoryItem[];
   addInventoryItem: (barcode: string, quantity: number) => Promise<boolean>;
   updateItemQuantity: (bookId: string, quantity: number) => void;
@@ -38,7 +36,7 @@ interface InventoryContextType {
   isSaving: boolean;
   isScanning: boolean;
   setIsScanning: (scanning: boolean) => void;
-  saveBatch: () => Promise<boolean>;
+  saveBatch: (batchName: string) => Promise<boolean>;
   resetInventory: () => void;
 }
 
@@ -47,7 +45,6 @@ const InventoryContext = createContext<InventoryContextType | undefined>(
 );
 
 export function InventoryProvider({ children }: { children: React.ReactNode }) {
-  const [currentBatch, setCurrentBatch] = useState<string>("");
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
@@ -55,11 +52,6 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
 
   // Carregar dados do localStorage quando o componente é montado
   useEffect(() => {
-    const savedBatch = localStorage.getItem("inventoryBatch");
-    if (savedBatch) {
-      setCurrentBatch(savedBatch);
-    }
-
     const savedItems = localStorage.getItem("inventoryItems");
     if (savedItems) {
       try {
@@ -72,34 +64,21 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
 
   // Salvar dados no localStorage quando eles mudam
   useEffect(() => {
-    if (currentBatch) {
-      localStorage.setItem("inventoryBatch", currentBatch);
-    }
-
     if (inventoryItems.length > 0) {
       localStorage.setItem("inventoryItems", JSON.stringify(inventoryItems));
     }
-  }, [currentBatch, inventoryItems]);
+  }, [inventoryItems]);
 
   const addInventoryItem = async (
     barcode: string,
     quantity: number
   ): Promise<boolean> => {
-    if (!currentBatch) {
-      toast({
-        title: "Lote não selecionado",
-        description: "Selecione um lote antes de adicionar itens",
-        variant: "destructive",
-      });
-      return false;
-    }
-
     try {
-      // Primeiro tenta buscar da API de livros normais
-      const response = await axios.get(`/api/books/barcode/${barcode}`);
+      // Buscar da API de inventário
+      const response = await axios.get(`/api/inventory/barcode/${barcode}`);
       const book = response.data;
 
-      // Verificar se o livro já está no inventário
+      // Verificar se o livro já está no inventário local
       const existingIndex = inventoryItems.findIndex(
         (item) => item.bookId === book.id
       );
@@ -120,11 +99,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
           ...prev,
           {
             bookId: book.id,
-            book: {
-              ...book,
-              coverPrice: Number(book.coverPrice),
-              price: Number(book.price),
-            },
+            book: book, // Já está serializado pela API
             quantity,
             barcodeUsed: barcode,
           },
@@ -170,11 +145,11 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     setInventoryItems((prev) => prev.filter((item) => item.bookId !== bookId));
   };
 
-  const saveBatch = async (): Promise<boolean> => {
-    if (!currentBatch) {
+  const saveBatch = async (batchName: string): Promise<boolean> => {
+    if (!batchName) {
       toast({
         title: "Erro",
-        description: "Selecione um lote antes de salvar",
+        description: "Nome do lote é obrigatório",
         variant: "destructive",
       });
       return false;
@@ -194,7 +169,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
 
       // Enviar dados para a API
       await axios.post("/api/inventory", {
-        batchName: currentBatch,
+        batchName: batchName,
         items: inventoryItems.map((item) => ({
           bookId: item.bookId,
           quantity: item.quantity,
@@ -204,7 +179,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
 
       toast({
         title: "Lote salvo com sucesso",
-        description: `Foram salvos ${inventoryItems.length} itens no lote ${currentBatch}`,
+        description: `Foram salvos ${inventoryItems.length} itens no lote ${batchName}`,
       });
 
       // Limpar dados após salvar com sucesso
@@ -237,8 +212,6 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
   };
 
   const value: InventoryContextType = {
-    currentBatch,
-    setCurrentBatch,
     inventoryItems,
     addInventoryItem,
     updateItemQuantity,

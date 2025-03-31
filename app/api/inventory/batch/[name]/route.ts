@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 //app/api/inventory/batch/[name]/route.ts
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
@@ -10,36 +11,56 @@ export async function GET(
   try {
     const batchName = decodeURIComponent(params.name);
 
-    // Buscar estatísticas do lote
-    const books = await prisma.inventoryBook.findMany({
+    // Buscar todas as entradas do lote
+    const entries = await prisma.inventoryEntry.findMany({
       where: { batchName },
       include: {
-        entries: true,
+        inventoryBook: true,
       },
     });
 
-    if (books.length === 0) {
+    if (entries.length === 0) {
       return NextResponse.json(
         { error: "Lote não encontrado" },
         { status: 404 }
       );
     }
 
+    // Agrupar por livro
+    const booksMap = entries.reduce((acc, entry) => {
+      const bookId = entry.inventoryBookId;
+
+      if (!acc[bookId]) {
+        acc[bookId] = {
+          book: entry.inventoryBook,
+          totalQuantity: 0,
+          entries: [],
+        };
+      }
+
+      acc[bookId].totalQuantity += entry.quantity;
+      acc[bookId].entries.push(entry);
+
+      return acc;
+    }, {} as Record<string, { book: any; totalQuantity: number; entries: any[] }>);
+
+    const books = Object.values(booksMap);
+
     // Calcular estatísticas
     const totalBooks = books.length;
-    const totalQuantity = books.reduce((sum, book) => sum + book.quantity, 0);
-    const totalEntries = books.reduce(
-      (sum, book) => sum + book.entries.length,
+    const totalQuantity = books.reduce(
+      (sum, item) => sum + item.totalQuantity,
       0
     );
+    const totalEntries = entries.length;
     const totalValue = books.reduce(
-      (sum, book) => sum + Number(book.coverPrice) * book.quantity,
+      (sum, item) => sum + Number(item.book.coverPrice) * item.totalQuantity,
       0
     );
 
     // Agrupar por editora
-    const publisherGroups = books.reduce((acc, book) => {
-      const publisher = book.publisher;
+    const publisherGroups = books.reduce((acc, item) => {
+      const publisher = item.book.publisher;
       if (!acc[publisher]) {
         acc[publisher] = {
           totalBooks: 0,
@@ -49,8 +70,9 @@ export async function GET(
       }
 
       acc[publisher].totalBooks += 1;
-      acc[publisher].totalQuantity += book.quantity;
-      acc[publisher].totalValue += Number(book.coverPrice) * book.quantity;
+      acc[publisher].totalQuantity += item.totalQuantity;
+      acc[publisher].totalValue +=
+        Number(item.book.coverPrice) * item.totalQuantity;
 
       return acc;
     }, {} as Record<string, { totalBooks: number; totalQuantity: number; totalValue: number }>);
@@ -86,36 +108,46 @@ export async function DELETE(
     const batchName = decodeURIComponent(params.name);
 
     // Verifica se o lote existe
-    const books = await prisma.inventoryBook.findMany({
+    const entries = await prisma.inventoryEntry.findMany({
       where: { batchName },
-      select: { id: true },
+      select: { id: true, inventoryBookId: true, quantity: true },
     });
 
-    if (books.length === 0) {
+    if (entries.length === 0) {
       return NextResponse.json(
         { error: "Lote não encontrado" },
         { status: 404 }
       );
     }
 
-    // Buscar IDs de todas as entradas associadas ao lote
-    const bookIds = books.map((book) => book.id);
+    // Agrupar entradas por inventoryBookId
+    const bookQuantities = entries.reduce((acc, entry) => {
+      if (!acc[entry.inventoryBookId]) {
+        acc[entry.inventoryBookId] = 0;
+      }
+      acc[entry.inventoryBookId] += entry.quantity;
+      return acc;
+    }, {} as Record<string, number>);
 
     // Executar a exclusão em uma transação
-    await prisma.$transaction([
-      // Primeiro excluir as entradas
-      prisma.inventoryEntry.deleteMany({
-        where: {
-          inventoryBookId: { in: bookIds },
-          batchName,
-        },
-      }),
+    await prisma.$transaction(async (tx) => {
+      // Atualizar as quantidades nos livros do inventário
+      for (const [bookId, quantity] of Object.entries(bookQuantities)) {
+        await tx.inventoryBook.update({
+          where: { id: bookId },
+          data: {
+            quantity: {
+              decrement: quantity,
+            },
+          },
+        });
+      }
 
-      // Depois excluir os livros
-      prisma.inventoryBook.deleteMany({
+      // Excluir as entradas
+      await tx.inventoryEntry.deleteMany({
         where: { batchName },
-      }),
-    ]);
+      });
+    });
 
     return NextResponse.json({
       success: true,

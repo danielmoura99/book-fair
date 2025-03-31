@@ -1,4 +1,4 @@
-//app/api/inventory/batches/route.ts
+//app/api/inventory/batch/route.ts
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
@@ -6,7 +6,7 @@ import { NextResponse } from "next/server";
 export async function GET() {
   try {
     // Buscar lotes únicos e contar quantos livros cada um tem
-    const batches = await prisma.inventoryBook.groupBy({
+    const batches = await prisma.inventoryEntry.groupBy({
       by: ["batchName"],
       _count: {
         id: true,
@@ -19,11 +19,28 @@ export async function GET() {
     // Formatar resultados
     const formattedBatches = batches.map((batch) => ({
       name: batch.batchName,
-      bookCount: batch._count.id,
+      entryCount: batch._count.id,
       totalQuantity: batch._sum.quantity || 0,
     }));
 
-    return NextResponse.json(formattedBatches);
+    // Para cada lote, vamos buscar a quantidade única de livros (codFle distintos)
+    const batchesWithCounts = await Promise.all(
+      formattedBatches.map(async (batch) => {
+        const bookCount = await prisma.inventoryEntry.groupBy({
+          by: ["inventoryBookId"],
+          where: {
+            batchName: batch.name,
+          },
+        });
+
+        return {
+          ...batch,
+          bookCount: bookCount.length,
+        };
+      })
+    );
+
+    return NextResponse.json(batchesWithCounts);
   } catch (error) {
     console.error("Erro ao buscar lotes de inventário:", error);
     return NextResponse.json(

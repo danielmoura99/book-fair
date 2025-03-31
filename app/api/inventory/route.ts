@@ -1,7 +1,17 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 //app/api/inventory/route.ts
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
-//import { Prisma } from "@prisma/client";
+import { InventoryBook, InventoryEntry } from "@prisma/client";
+
+// Interfaces para tipagem
+interface InventoryBookWithEntries extends InventoryBook {
+  entries: InventoryEntry[];
+}
+
+interface EntryWithBook extends InventoryEntry {
+  inventoryBook: InventoryBook;
+}
 
 // GET - Buscar todos os livros no inventário
 export async function GET(req: Request) {
@@ -11,14 +21,45 @@ export async function GET(req: Request) {
 
     // Se um lote específico for solicitado
     if (batchName) {
-      const books = await prisma.inventoryBook.findMany({
+      const entries: any[] = await prisma.inventoryEntry.findMany({
         where: {
           batchName: batchName,
         },
-        orderBy: {
-          title: "asc",
+        include: {
+          inventoryBook: true,
         },
       });
+
+      // Agrupar entradas por inventoryBook
+      const booksMap: Record<
+        string,
+        {
+          book: any;
+          quantity: number;
+          entries: InventoryEntry[];
+        }
+      > = {};
+
+      entries.forEach((entry: EntryWithBook) => {
+        const bookId = entry.inventoryBookId;
+
+        if (!booksMap[bookId]) {
+          booksMap[bookId] = {
+            book: {
+              ...entry.inventoryBook,
+              coverPrice: Number(entry.inventoryBook.coverPrice),
+              price: Number(entry.inventoryBook.price),
+            },
+            quantity: 0,
+            entries: [],
+          };
+        }
+
+        booksMap[bookId].quantity += entry.quantity;
+        booksMap[bookId].entries.push(entry);
+      });
+
+      const books = Object.values(booksMap);
       return NextResponse.json(books);
     }
 
@@ -27,8 +68,19 @@ export async function GET(req: Request) {
       orderBy: {
         title: "asc",
       },
+      include: {
+        entries: true,
+      },
     });
-    return NextResponse.json(books);
+
+    // Serializar os dados antes de retornar
+    const serializedBooks = books.map((book: InventoryBookWithEntries) => ({
+      ...book,
+      coverPrice: Number(book.coverPrice),
+      price: Number(book.price),
+    }));
+
+    return NextResponse.json(serializedBooks);
   } catch (error) {
     console.error("Erro ao buscar livros do inventário:", error);
     return NextResponse.json(
@@ -58,64 +110,43 @@ export async function POST(req: Request) {
       for (const item of items) {
         const { bookId, quantity, barcodeUsed } = item;
 
-        // Buscar o livro da base de dados Book
-        const book = await tx.book.findUnique({
+        // Verificar se o livro existe no inventário
+        const inventoryBook = await tx.inventoryBook.findUnique({
           where: { id: bookId },
         });
 
-        if (!book) {
+        if (!inventoryBook) {
+          console.warn(`Livro com ID ${bookId} não encontrado no inventário`);
           continue; // Pular se o livro não for encontrado
         }
 
-        // Verificar se já existe este livro no inventário
-        let inventoryBook = await tx.inventoryBook.findUnique({
-          where: { codFle: book.codFle },
+        // Atualizar a quantidade
+        const updatedBook = await tx.inventoryBook.update({
+          where: { id: inventoryBook.id },
+          data: {
+            quantity: {
+              increment: quantity,
+            },
+          },
         });
-
-        // Se não existir, criar novo registro no inventário
-        if (!inventoryBook) {
-          inventoryBook = await tx.inventoryBook.create({
-            data: {
-              codFle: book.codFle,
-              barCode: book.barCode,
-              location: book.location,
-              quantity: quantity, // Quantidade inicial do lote
-              coverPrice: book.coverPrice,
-              price: book.price,
-              title: book.title,
-              author: book.author,
-              medium: book.medium,
-              publisher: book.publisher,
-              distributor: book.distributor || "",
-              subject: book.subject,
-              batchName, // O lote ao qual este livro pertence
-            },
-          });
-        } else {
-          // Se já existir, atualizar a quantidade
-          inventoryBook = await tx.inventoryBook.update({
-            where: { id: inventoryBook.id },
-            data: {
-              quantity: {
-                increment: quantity, // Incrementar a quantidade existente
-              },
-            },
-          });
-        }
 
         // Registrar entrada no histórico de inventário
         const entry = await tx.inventoryEntry.create({
           data: {
             inventoryBookId: inventoryBook.id,
-            barcodeUsed,
-            quantity,
-            batchName,
+            barcodeUsed: barcodeUsed,
+            quantity: quantity,
+            batchName: batchName,
             createdBy: operatorName || "Sistema",
           },
         });
 
         processedItems.push({
-          book: inventoryBook,
+          book: {
+            ...updatedBook,
+            coverPrice: Number(updatedBook.coverPrice),
+            price: Number(updatedBook.price),
+          },
           entry,
         });
       }

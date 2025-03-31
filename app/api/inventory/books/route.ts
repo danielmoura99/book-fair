@@ -1,6 +1,18 @@
 //app/api/inventory/books/route.ts
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { InventoryBook, InventoryEntry } from "@prisma/client";
+
+// Interface para tipagem
+interface EntryWithBook extends InventoryEntry {
+  inventoryBook: InventoryBook;
+}
+
+interface BookSummary extends InventoryBook {
+  totalEntries: number;
+  totalQuantity: number;
+  entries: InventoryEntry[];
+}
 
 // GET - Buscar todos os livros do inventário por lote
 export async function GET(req: Request) {
@@ -16,44 +28,57 @@ export async function GET(req: Request) {
       );
     }
 
-    // Buscar livros do inventário por lote
-    const books = await prisma.inventoryBook.findMany({
+    // Buscar todas as entradas do lote
+    const entries = await prisma.inventoryEntry.findMany({
       where: {
         batchName: batchName,
       },
-      orderBy: {
-        title: "asc",
-      },
       include: {
-        entries: true,
+        inventoryBook: true,
       },
     });
 
-    // Formatar a resposta para incluir dados de totais
-    const formattedBooks = books.map((book) => ({
+    // Agrupar por livro
+    const booksMap: Record<string, BookSummary> = {};
+
+    entries.forEach((entry: EntryWithBook) => {
+      const book = entry.inventoryBook;
+      const bookId = book.id;
+
+      if (!booksMap[bookId]) {
+        booksMap[bookId] = {
+          ...book,
+          totalEntries: 0,
+          totalQuantity: 0,
+          entries: [],
+        };
+      }
+
+      booksMap[bookId].totalQuantity += entry.quantity;
+      booksMap[bookId].totalEntries += 1;
+      booksMap[bookId].entries.push(entry);
+    });
+
+    // Converter para array e serializar
+    const books = Object.values(booksMap).map((book) => ({
       ...book,
       coverPrice: Number(book.coverPrice),
       price: Number(book.price),
-      totalEntries: book.entries.length,
-      totalQuantity: book.entries.reduce(
-        (sum, entry) => sum + entry.quantity,
-        0
-      ),
     }));
 
-    // Calcular estatísticas do lote
-    const totalBooks = formattedBooks.length;
-    const totalQuantity = formattedBooks.reduce(
-      (sum, book) => sum + book.quantity,
+    // Calcular estatísticas
+    const totalBooks = books.length;
+    const totalQuantity = books.reduce(
+      (sum, book) => sum + book.totalQuantity,
       0
     );
-    const totalValue = formattedBooks.reduce(
-      (sum, book) => sum + book.coverPrice * book.quantity,
+    const totalValue = books.reduce(
+      (sum, book) => sum + book.coverPrice * book.totalQuantity,
       0
     );
 
     return NextResponse.json({
-      books: formattedBooks,
+      books,
       summary: {
         totalBooks,
         totalQuantity,

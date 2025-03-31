@@ -11,12 +11,10 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { FileDown, Save, AlertTriangle, Loader2 } from "lucide-react";
+import { FileDown, Loader2 } from "lucide-react";
 import { useInventory } from "./inventory-context";
 import { useToast } from "@/hooks/use-toast";
-import axios from "axios";
 import * as XLSX from "xlsx";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface InventoryExportProps {
   open: boolean;
@@ -24,17 +22,14 @@ interface InventoryExportProps {
 }
 
 export function InventoryExport({ open, onOpenChange }: InventoryExportProps) {
-  const { inventoryItems, currentBatch } = useInventory();
+  const { inventoryItems } = useInventory();
   const { toast } = useToast();
   const [exporting, setExporting] = useState(false);
-  const [transferring, setTransferring] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   // Exportar para Excel
   const handleExportToExcel = async () => {
     try {
       setExporting(true);
-      setError(null);
 
       // Formatar dados para Excel
       const excelData = inventoryItems.map((item) => ({
@@ -44,6 +39,7 @@ export function InventoryExport({ open, onOpenChange }: InventoryExportProps) {
         Autor: item.book.author,
         Médium: item.book.medium,
         Editora: item.book.publisher,
+        Distribuidor: item.book.distributor,
         Assunto: item.book.subject,
         Local: item.book.location,
         Quantidade: item.quantity,
@@ -58,10 +54,7 @@ export function InventoryExport({ open, onOpenChange }: InventoryExportProps) {
 
       // Formatar data para nome do arquivo
       const date = new Date().toISOString().split("T")[0];
-      const fileName = `inventario_${currentBatch.replace(
-        /\s+/g,
-        "_"
-      )}_${date}.xlsx`;
+      const fileName = `inventario_${date}.xlsx`;
 
       // Gerar arquivo
       XLSX.writeFile(workbook, fileName);
@@ -74,43 +67,13 @@ export function InventoryExport({ open, onOpenChange }: InventoryExportProps) {
       onOpenChange(false);
     } catch (error) {
       console.error("Erro ao exportar para Excel:", error);
-      setError("Erro ao gerar arquivo Excel. Tente novamente.");
+      toast({
+        title: "Erro",
+        description: "Erro ao gerar arquivo Excel. Tente novamente.",
+        variant: "destructive",
+      });
     } finally {
       setExporting(false);
-    }
-  };
-
-  // Transferir para sistema da feira (tabela Book)
-  const handleTransferToFair = async () => {
-    try {
-      setTransferring(true);
-      setError(null);
-
-      // Fazer requisição para API para transferir os dados
-      const response = await axios.post("/api/inventory/export", {
-        batchName: currentBatch,
-        bookIds: inventoryItems.map((item) => item.bookId),
-      });
-
-      toast({
-        title: "Transferência concluída",
-        description: `${response.data.data.books.length} livros foram transferidos para o sistema da feira.`,
-      });
-
-      onOpenChange(false);
-    } catch (error) {
-      console.error("Erro ao transferir para sistema:", error);
-
-      if (axios.isAxiosError(error)) {
-        setError(
-          error.response?.data?.message ||
-            "Erro ao transferir para o sistema da feira."
-        );
-      } else {
-        setError("Erro desconhecido ao transferir para o sistema da feira.");
-      }
-    } finally {
-      setTransferring(false);
     }
   };
 
@@ -124,34 +87,24 @@ export function InventoryExport({ open, onOpenChange }: InventoryExportProps) {
           </DialogDescription>
         </DialogHeader>
 
-        {error && (
-          <Alert variant="destructive">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertTitle>Erro</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-
-        <div className="grid gap-4 py-4">
+        <div className="grid gap-6 py-4">
           <div className="space-y-2">
             <h3 className="text-sm font-medium">Resumo do Inventário</h3>
             <p className="text-sm text-muted-foreground">
-              Lote: <span className="font-medium">{currentBatch}</span> |
-              Títulos:{" "}
+              Total de itens:{" "}
               <span className="font-medium">{inventoryItems.length}</span> |
-              Total:{" "}
+              Total de unidades:{" "}
               <span className="font-medium">
                 {inventoryItems.reduce((sum, item) => sum + item.quantity, 0)}
-              </span>{" "}
-              livros
+              </span>
             </p>
           </div>
 
           <div className="border rounded-md p-4 space-y-2">
             <h3 className="text-sm font-medium">Exportar para Excel</h3>
             <p className="text-sm text-muted-foreground">
-              Gera um arquivo Excel com todos os itens do inventário atual, que
-              pode ser importado posteriormente.
+              Gera um arquivo Excel com todos os itens escaneados, que pode ser
+              importado posteriormente ou compartilhado.
             </p>
             <Button
               variant="outline"
@@ -168,34 +121,6 @@ export function InventoryExport({ open, onOpenChange }: InventoryExportProps) {
                 <>
                   <FileDown className="mr-2 h-4 w-4" />
                   Exportar para Excel
-                </>
-              )}
-            </Button>
-          </div>
-
-          <div className="border rounded-md p-4 space-y-2">
-            <h3 className="text-sm font-medium">
-              Transferir para Sistema da Feira
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              Transfere os livros diretamente para o sistema da feira,
-              atualizando a tabela Book.
-            </p>
-            <Button
-              variant="default"
-              onClick={handleTransferToFair}
-              disabled={transferring}
-              className="w-full"
-            >
-              {transferring ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Transferindo...
-                </>
-              ) : (
-                <>
-                  <Save className="mr-2 h-4 w-4" />
-                  Transferir para Sistema da Feira
                 </>
               )}
             </Button>

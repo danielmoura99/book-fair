@@ -18,31 +18,28 @@ import {
   CheckCircle,
   Save,
   List,
-  //Trash2,
   RefreshCw,
   FileDown,
 } from "lucide-react";
 import { useInventory } from "./inventory-context";
-import { BatchSelector } from "./batch-selector";
 import { InventoryItemsList } from "./inventory-items-list";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import // Dialog,
+// DialogContent,
+// DialogHeader,
+// DialogTitle,
+// DialogDescription,
+// DialogFooter,
+"@/components/ui/dialog";
+import { InventoryExport } from "./inventory-export";
+import { SaveBatchDialog } from "./save-batch-dialog";
 
 export default function InventoryScanner() {
   const {
-    currentBatch,
     inventoryItems,
     addInventoryItem,
-    saveBatch,
     isSaving,
     isScanning,
     setIsScanning,
@@ -56,6 +53,7 @@ export default function InventoryScanner() {
   const [activeTab, setActiveTab] = useState("scanner");
   const [lastScanned, setLastScanned] = useState<string | null>(null);
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
+  const [isSaveBatchDialogOpen, setIsSaveBatchDialogOpen] = useState(false);
 
   const barcodeInputRef = useRef<HTMLInputElement>(null);
   const quantityInputRef = useRef<HTMLInputElement>(null);
@@ -148,12 +146,6 @@ export default function InventoryScanner() {
     }
   };
 
-  const handleExportInventory = () => {
-    // Aqui seria a lógica para exportar o inventário para algum formato
-    // Por exemplo, um arquivo Excel ou para a tabela Book
-    setIsExportDialogOpen(true);
-  };
-
   return (
     <div className="flex-1 p-8">
       <div className="mb-6">
@@ -166,20 +158,6 @@ export default function InventoryScanner() {
       <div className="grid gap-6 md:grid-cols-12">
         {/* Coluna Esquerda - Scanner e Controles */}
         <div className="md:col-span-5 space-y-6">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>Lote de Entrada</CardTitle>
-                {currentBatch && (
-                  <Badge variant="default">{currentBatch}</Badge>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent>
-              <BatchSelector />
-            </CardContent>
-          </Card>
-
           <Card>
             <CardHeader>
               <CardTitle>Leitura de Livros</CardTitle>
@@ -288,10 +266,8 @@ export default function InventoryScanner() {
             <CardFooter className="flex flex-col gap-2">
               <Button
                 variant="default"
-                onClick={() => saveBatch()}
-                disabled={
-                  isSaving || inventoryItems.length === 0 || !currentBatch
-                }
+                onClick={() => setIsSaveBatchDialogOpen(true)}
+                disabled={isSaving || inventoryItems.length === 0}
                 className="w-full"
               >
                 {isSaving ? "Salvando..." : "Salvar Inventário"}
@@ -311,7 +287,7 @@ export default function InventoryScanner() {
 
                 <Button
                   variant="outline"
-                  onClick={handleExportInventory}
+                  onClick={() => setIsExportDialogOpen(true)}
                   disabled={inventoryItems.length === 0}
                   className="flex-1"
                 >
@@ -328,7 +304,7 @@ export default function InventoryScanner() {
           <Card className="h-full">
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle>Itens no Lote</CardTitle>
+                <CardTitle>Itens Escaneados</CardTitle>
                 <Badge variant="outline">
                   {inventoryItems.length} itens registrados
                 </Badge>
@@ -344,47 +320,16 @@ export default function InventoryScanner() {
       </div>
 
       {/* Dialog para exportação */}
-      <Dialog open={isExportDialogOpen} onOpenChange={setIsExportDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Exportar Inventário</DialogTitle>
-            <DialogDescription>
-              Escolha como deseja exportar os dados do inventário atual.
-            </DialogDescription>
-          </DialogHeader>
+      <InventoryExport
+        open={isExportDialogOpen}
+        onOpenChange={setIsExportDialogOpen}
+      />
 
-          <div className="grid gap-4 py-4">
-            <Button
-              onClick={() => {
-                console.log("Exportar para Excel");
-                setIsExportDialogOpen(false);
-              }}
-            >
-              <FileDown className="mr-2 h-4 w-4" />
-              Exportar para Excel
-            </Button>
-
-            <Button
-              onClick={() => {
-                console.log("Transferir para sistema");
-                setIsExportDialogOpen(false);
-              }}
-            >
-              <Save className="mr-2 h-4 w-4" />
-              Transferir para Sistema da Feira
-            </Button>
-          </div>
-
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsExportDialogOpen(false)}
-            >
-              Cancelar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Dialog para salvar lote */}
+      <SaveBatchDialog
+        open={isSaveBatchDialogOpen}
+        onOpenChange={setIsSaveBatchDialogOpen}
+      />
     </div>
   );
 }

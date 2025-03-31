@@ -7,31 +7,24 @@ export async function GET(
   { params }: { params: { code: string } }
 ) {
   try {
-    // Buscar primeiro na tabela Book
-    const book = await prisma.book.findFirst({
-      where: {
-        barCode: params.code,
-      },
-    });
-
-    if (book) {
-      return NextResponse.json(book);
-    }
-
-    // Se não encontrar na tabela Book, buscar na tabela InventoryBook
+    // Buscar apenas na tabela InventoryBook
     const inventoryBook = await prisma.inventoryBook.findFirst({
       where: {
-        barCode: params.code,
+        OR: [{ barCode: params.code }, { codFle: params.code }],
       },
     });
 
     if (inventoryBook) {
-      return NextResponse.json(inventoryBook);
+      return NextResponse.json({
+        ...inventoryBook,
+        coverPrice: Number(inventoryBook.coverPrice),
+        price: Number(inventoryBook.price),
+      });
     }
 
-    // Se não encontrar em nenhuma das tabelas
+    // Se não encontrar, retorna 404
     return NextResponse.json(
-      { error: "Livro não encontrado" },
+      { error: "Livro não encontrado no inventário" },
       { status: 404 }
     );
   } catch (error) {
