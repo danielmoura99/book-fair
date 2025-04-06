@@ -5,6 +5,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import axios from "axios";
 
+// Definir interfaces usando apenas InventoryBook
 interface InventoryBook {
   id: string;
   codFle: string;
@@ -21,23 +22,22 @@ interface InventoryBook {
   location: string;
 }
 
-interface InventoryItem {
+interface InventoryUpdate {
   bookId: string;
   book: InventoryBook;
-  quantity: number;
-  barcodeUsed: string;
+  newQuantity: number;
+  previousQuantity: number;
 }
 
 interface InventoryContextType {
-  inventoryItems: InventoryItem[];
-  addInventoryItem: (barcode: string, quantity: number) => Promise<boolean>;
-  updateItemQuantity: (bookId: string, quantity: number) => void;
-  removeInventoryItem: (bookId: string) => void;
+  pendingUpdates: InventoryUpdate[];
+  addUpdate: (book: InventoryBook, quantity: number) => void;
+  removeUpdate: (bookId: string) => void;
   isSaving: boolean;
   isScanning: boolean;
   setIsScanning: (scanning: boolean) => void;
-  saveBatch: (batchName: string) => Promise<boolean>;
-  resetInventory: () => void;
+  saveUpdates: () => Promise<boolean>;
+  resetUpdates: () => void;
 }
 
 const InventoryContext = createContext<InventoryContextType | undefined>(
@@ -45,120 +45,72 @@ const InventoryContext = createContext<InventoryContextType | undefined>(
 );
 
 export function InventoryProvider({ children }: { children: React.ReactNode }) {
-  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
+  const [pendingUpdates, setPendingUpdates] = useState<InventoryUpdate[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const { toast } = useToast();
 
   // Carregar dados do localStorage quando o componente é montado
   useEffect(() => {
-    const savedItems = localStorage.getItem("inventoryItems");
-    if (savedItems) {
+    const savedUpdates = localStorage.getItem("inventoryUpdates");
+    if (savedUpdates) {
       try {
-        setInventoryItems(JSON.parse(savedItems));
+        setPendingUpdates(JSON.parse(savedUpdates));
       } catch (error) {
-        console.error("Erro ao carregar itens do localStorage:", error);
+        console.error("Erro ao carregar atualizações do localStorage:", error);
       }
     }
   }, []);
 
   // Salvar dados no localStorage quando eles mudam
   useEffect(() => {
-    if (inventoryItems.length > 0) {
-      localStorage.setItem("inventoryItems", JSON.stringify(inventoryItems));
+    if (pendingUpdates.length > 0) {
+      localStorage.setItem("inventoryUpdates", JSON.stringify(pendingUpdates));
     }
-  }, [inventoryItems]);
+  }, [pendingUpdates]);
 
-  const addInventoryItem = async (
-    barcode: string,
-    quantity: number
-  ): Promise<boolean> => {
-    try {
-      // Buscar da API de inventário
-      const response = await axios.get(`/api/inventory/barcode/${barcode}`);
-      const book = response.data;
-
-      // Verificar se o livro já está no inventário local
-      const existingIndex = inventoryItems.findIndex(
-        (item) => item.bookId === book.id
-      );
+  const addUpdate = (book: InventoryBook, newQuantity: number) => {
+    setPendingUpdates((prev) => {
+      // Verificar se já existe uma atualização para esse livro
+      const existingIndex = prev.findIndex((item) => item.bookId === book.id);
 
       if (existingIndex >= 0) {
         // Atualizar a quantidade se o livro já existe
-        const updatedItems = [...inventoryItems];
-        updatedItems[existingIndex].quantity += quantity;
-        setInventoryItems(updatedItems);
-
-        toast({
-          title: "Quantidade atualizada",
-          description: `${book.title} - Nova quantidade: ${updatedItems[existingIndex].quantity}`,
-        });
+        const updatedItems = [...prev];
+        updatedItems[existingIndex] = {
+          ...updatedItems[existingIndex],
+          newQuantity,
+        };
+        return updatedItems;
       } else {
-        // Adicionar novo item ao inventário
-        setInventoryItems((prev) => [
+        // Adicionar nova atualização
+        return [
           ...prev,
           {
             bookId: book.id,
-            book: book, // Já está serializado pela API
-            quantity,
-            barcodeUsed: barcode,
+            book,
+            newQuantity,
+            previousQuantity: book.quantity,
           },
-        ]);
-
-        toast({
-          title: "Item adicionado",
-          description: `${book.title} - Quantidade: ${quantity}`,
-        });
+        ];
       }
+    });
 
-      return true;
-    } catch (error) {
-      console.error("Erro ao adicionar item:", error);
-
-      if (axios.isAxiosError(error) && error.response?.status === 404) {
-        toast({
-          title: "Livro não encontrado",
-          description: `Código de barras não reconhecido: ${barcode}`,
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Erro ao processar",
-          description: "Ocorreu um erro ao processar o código de barras",
-          variant: "destructive",
-        });
-      }
-
-      return false;
-    }
+    toast({
+      title: "Atualização adicionada",
+      description: `${book.title} - Quantidade: ${newQuantity}`,
+    });
   };
 
-  const updateItemQuantity = (bookId: string, quantity: number) => {
-    setInventoryItems((prev) =>
-      prev.map((item) =>
-        item.bookId === bookId ? { ...item, quantity } : item
-      )
-    );
+  const removeUpdate = (bookId: string) => {
+    setPendingUpdates((prev) => prev.filter((item) => item.bookId !== bookId));
   };
 
-  const removeInventoryItem = (bookId: string) => {
-    setInventoryItems((prev) => prev.filter((item) => item.bookId !== bookId));
-  };
-
-  const saveBatch = async (batchName: string): Promise<boolean> => {
-    if (!batchName) {
+  const saveUpdates = async (): Promise<boolean> => {
+    if (pendingUpdates.length === 0) {
       toast({
-        title: "Erro",
-        description: "Nome do lote é obrigatório",
-        variant: "destructive",
-      });
-      return false;
-    }
-
-    if (inventoryItems.length === 0) {
-      toast({
-        title: "Erro",
-        description: "Adicione pelo menos um item antes de salvar",
+        title: "Aviso",
+        description: "Não há atualizações para salvar",
         variant: "destructive",
       });
       return false;
@@ -167,32 +119,31 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     try {
       setIsSaving(true);
 
-      // Enviar dados para a API
-      await axios.post("/api/inventory", {
-        batchName: batchName,
-        items: inventoryItems.map((item) => ({
-          bookId: item.bookId,
-          quantity: item.quantity,
-          barcodeUsed: item.barcodeUsed,
+      // Enviar atualizações para a API
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const response = await axios.post("/api/inventory/update-quantities", {
+        updates: pendingUpdates.map((update) => ({
+          bookId: update.bookId,
+          quantity: update.newQuantity,
         })),
       });
 
       toast({
-        title: "Lote salvo com sucesso",
-        description: `Foram salvos ${inventoryItems.length} itens no lote ${batchName}`,
+        title: "Alterações salvas",
+        description: `${pendingUpdates.length} atualizações de quantidade salvas com sucesso!`,
       });
 
-      // Limpar dados após salvar com sucesso
-      setInventoryItems([]);
-      localStorage.removeItem("inventoryItems");
+      // Limpar atualizações após salvar com sucesso
+      setPendingUpdates([]);
+      localStorage.removeItem("inventoryUpdates");
 
       return true;
     } catch (error) {
-      console.error("Erro ao salvar lote:", error);
+      console.error("Erro ao salvar atualizações:", error);
 
       toast({
         title: "Erro ao salvar",
-        description: "Ocorreu um erro ao salvar o lote de inventário",
+        description: "Ocorreu um erro ao salvar as atualizações de inventário",
         variant: "destructive",
       });
 
@@ -202,25 +153,25 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const resetInventory = () => {
-    setInventoryItems([]);
-    localStorage.removeItem("inventoryItems");
+  const resetUpdates = () => {
+    setPendingUpdates([]);
+    localStorage.removeItem("inventoryUpdates");
+
     toast({
-      title: "Inventário limpo",
-      description: "Todos os itens foram removidos do inventário atual",
+      title: "Atualizações descartadas",
+      description: "Todas as atualizações pendentes foram removidas",
     });
   };
 
   const value: InventoryContextType = {
-    inventoryItems,
-    addInventoryItem,
-    updateItemQuantity,
-    removeInventoryItem,
-    saveBatch,
+    pendingUpdates,
+    addUpdate,
+    removeUpdate,
+    saveUpdates,
     isSaving,
     isScanning,
     setIsScanning,
-    resetInventory,
+    resetUpdates,
   };
 
   return (

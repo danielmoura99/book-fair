@@ -1,94 +1,81 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 //app/api/inventory/books/route.ts
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
-import { InventoryBook, InventoryEntry } from "@prisma/client";
 
-// Interface para tipagem
-interface EntryWithBook extends InventoryEntry {
-  inventoryBook: InventoryBook;
-}
-
-interface BookSummary extends InventoryBook {
-  totalEntries: number;
-  totalQuantity: number;
-  entries: InventoryEntry[];
-}
-
-// GET - Buscar todos os livros do inventário por lote
+// GET - Buscar livros por filtros específicos
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-    const batchName = searchParams.get("batch");
+    const searchTerm = searchParams.get("term") || "";
+    const publisher = searchParams.get("publisher");
+    const distributor = searchParams.get("distributor");
+    const inStockOnly = searchParams.get("inStock") === "true";
+    const limit = Number(searchParams.get("limit") || "100");
 
-    // Verificar se foi fornecido um lote
-    if (!batchName) {
-      return NextResponse.json(
-        { error: "É necessário fornecer um lote para buscar os livros" },
-        { status: 400 }
-      );
+    // Construir o filtro com base nos parâmetros
+    const where: any = {};
+
+    // Filtro por termo de busca em vários campos
+    if (searchTerm) {
+      where.OR = [
+        { title: { contains: searchTerm, mode: "insensitive" } },
+        { author: { contains: searchTerm, mode: "insensitive" } },
+        { codFle: { contains: searchTerm, mode: "insensitive" } },
+        { barCode: { contains: searchTerm, mode: "insensitive" } },
+      ];
     }
 
-    // Buscar todas as entradas do lote
-    const entries = await prisma.inventoryEntry.findMany({
-      where: {
-        batchName: batchName,
+    // Filtros adicionais
+    if (publisher) {
+      where.publisher = { contains: publisher, mode: "insensitive" };
+    }
+
+    if (distributor) {
+      where.distributor = { contains: distributor, mode: "insensitive" };
+    }
+
+    if (inStockOnly) {
+      where.quantity = { gt: 0 };
+    }
+
+    // Buscar livros com os filtros aplicados
+    const books = await prisma.inventoryBook.findMany({
+      where,
+      orderBy: {
+        title: "asc",
       },
-      include: {
-        inventoryBook: true,
-      },
+      take: limit,
     });
 
-    // Agrupar por livro
-    const booksMap: Record<string, BookSummary> = {};
-
-    entries.forEach((entry: EntryWithBook) => {
-      const book = entry.inventoryBook;
-      const bookId = book.id;
-
-      if (!booksMap[bookId]) {
-        booksMap[bookId] = {
-          ...book,
-          totalEntries: 0,
-          totalQuantity: 0,
-          entries: [],
-        };
-      }
-
-      booksMap[bookId].totalQuantity += entry.quantity;
-      booksMap[bookId].totalEntries += 1;
-      booksMap[bookId].entries.push(entry);
-    });
-
-    // Converter para array e serializar
-    const books = Object.values(booksMap).map((book) => ({
+    // Serializar valores decimais
+    const serializedBooks = books.map((book) => ({
       ...book,
       coverPrice: Number(book.coverPrice),
       price: Number(book.price),
     }));
 
-    // Calcular estatísticas
-    const totalBooks = books.length;
-    const totalQuantity = books.reduce(
-      (sum, book) => sum + book.totalQuantity,
-      0
-    );
-    const totalValue = books.reduce(
-      (sum, book) => sum + book.coverPrice * book.totalQuantity,
-      0
-    );
+    // Calcular algumas estatísticas básicas
+    const stats = {
+      totalResults: books.length,
+      totalQuantity: books.reduce((sum, book) => sum + book.quantity, 0),
+      limit,
+    };
 
     return NextResponse.json({
-      books,
-      summary: {
-        totalBooks,
-        totalQuantity,
-        totalValue,
-      },
+      books: serializedBooks,
+      stats,
     });
   } catch (error) {
-    console.error("Erro ao buscar livros do inventário:", error);
+    console.error("Erro ao buscar livros:", error);
+
+    const errorMessage =
+      error instanceof Error
+        ? error.message
+        : "Erro desconhecido ao buscar livros";
+
     return NextResponse.json(
-      { error: "Erro ao buscar livros do inventário" },
+      { error: "Erro ao buscar livros", message: errorMessage },
       { status: 500 }
     );
   }

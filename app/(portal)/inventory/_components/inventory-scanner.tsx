@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 //app/(portal)/inventory/_components/inventory-scanner.tsx
 "use client";
 
@@ -13,37 +14,25 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Barcode,
-  CheckCircle,
-  Save,
-  List,
-  RefreshCw,
-  FileDown,
-} from "lucide-react";
+import { Barcode, CheckCircle, Save, Search, RefreshCw } from "lucide-react";
 import { useInventory } from "./inventory-context";
-import { InventoryItemsList } from "./inventory-items-list";
+
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import // Dialog,
-// DialogContent,
-// DialogHeader,
-// DialogTitle,
-// DialogDescription,
-// DialogFooter,
-"@/components/ui/dialog";
-import { InventoryExport } from "./inventory-export";
-import { SaveBatchDialog } from "./save-batch-dialog";
+import { useToast } from "@/hooks/use-toast";
+import axios from "axios";
+import { UpdatesList } from "./update-list";
 
 export default function InventoryScanner() {
   const {
-    inventoryItems,
-    addInventoryItem,
+    pendingUpdates,
+    addUpdate,
     isSaving,
     isScanning,
     setIsScanning,
-    resetInventory,
+    saveUpdates,
+    resetUpdates,
   } = useInventory();
 
   const [barcode, setBarcode] = useState("");
@@ -52,8 +41,9 @@ export default function InventoryScanner() {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("scanner");
   const [lastScanned, setLastScanned] = useState<string | null>(null);
-  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
-  const [isSaveBatchDialogOpen, setIsSaveBatchDialogOpen] = useState(false);
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
 
   const barcodeInputRef = useRef<HTMLInputElement>(null);
   const quantityInputRef = useRef<HTMLInputElement>(null);
@@ -89,16 +79,14 @@ export default function InventoryScanner() {
             return;
           }
 
-          const success = await addInventoryItem(barcode, quantity);
-          if (success) {
-            setLastScanned(barcode);
-            setBarcode("");
+          await processBarcode(barcode);
+          setLastScanned(barcode);
+          setBarcode("");
 
-            // Após uma leitura bem-sucedida, focar no input de quantidade para facilitar a alteração
-            if (quantityInputRef.current) {
-              quantityInputRef.current.focus();
-              quantityInputRef.current.select();
-            }
+          // Após uma leitura bem-sucedida, focar no input de quantidade
+          if (quantityInputRef.current) {
+            quantityInputRef.current.focus();
+            quantityInputRef.current.select();
           }
         } catch (error) {
           console.error("Erro ao processar código de barras:", error);
@@ -113,7 +101,7 @@ export default function InventoryScanner() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [barcode, addInventoryItem, quantity, isScanning, lastScanned]);
+  }, [barcode, quantity, isScanning, lastScanned]);
 
   // Limpar o último código escaneado após 2 segundos
   useEffect(() => {
@@ -123,6 +111,30 @@ export default function InventoryScanner() {
     }
   }, [lastScanned]);
 
+  const processBarcode = async (code: string) => {
+    try {
+      const response = await axios.get(`/api/inventory/barcode/${code}`);
+      const book = response.data;
+      addUpdate(book, quantity);
+      return true;
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 404) {
+        toast({
+          title: "Livro não encontrado",
+          description: `Código de barras não reconhecido: ${code}`,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Erro ao processar",
+          description: "Ocorreu um erro ao processar o código de barras",
+          variant: "destructive",
+        });
+      }
+      return false;
+    }
+  };
+
   const handleManualAdd = async () => {
     if (!manualBarcode) {
       setError("Digite um código de barras");
@@ -131,7 +143,7 @@ export default function InventoryScanner() {
 
     try {
       setError(null);
-      const success = await addInventoryItem(manualBarcode, quantity);
+      const success = await processBarcode(manualBarcode);
 
       if (success) {
         setManualBarcode("");
@@ -146,12 +158,38 @@ export default function InventoryScanner() {
     }
   };
 
+  const handleSearch = async () => {
+    if (!searchTerm) return;
+
+    setIsSearching(true);
+    try {
+      const response = await axios.get(
+        `/api/inventory/search?term=${encodeURIComponent(searchTerm)}`
+      );
+      setSearchResults(response.data);
+    } catch (error) {
+      console.error("Erro na pesquisa:", error);
+      setError("Erro ao pesquisar livros");
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleSelectSearchResult = (book: any) => {
+    addUpdate(book, quantity);
+    setSearchResults([]);
+    setSearchTerm("");
+  };
+
+  // Usar o hook useToast
+  const { toast } = useToast();
+
   return (
     <div className="flex-1 p-8">
       <div className="mb-6">
         <h1 className="text-3xl font-bold">Inventário de Livros</h1>
         <p className="text-muted-foreground">
-          Registre a entrada de livros em lotes por editora
+          Atualize as quantidades dos livros no catálogo
         </p>
       </div>
 
@@ -160,7 +198,7 @@ export default function InventoryScanner() {
         <div className="md:col-span-5 space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Leitura de Livros</CardTitle>
+              <CardTitle>Atualização de Estoque</CardTitle>
             </CardHeader>
             <CardContent>
               <Tabs
@@ -168,14 +206,18 @@ export default function InventoryScanner() {
                 value={activeTab}
                 onValueChange={setActiveTab}
               >
-                <TabsList className="grid w-full grid-cols-2">
+                <TabsList className="grid w-full grid-cols-3">
                   <TabsTrigger value="scanner">
                     <Barcode className="mr-2 h-4 w-4" />
-                    Scanner Automático
+                    Scanner
                   </TabsTrigger>
                   <TabsTrigger value="manual">
-                    <List className="mr-2 h-4 w-4" />
-                    Entrada Manual
+                    <Barcode className="mr-2 h-4 w-4" />
+                    Manual
+                  </TabsTrigger>
+                  <TabsTrigger value="search">
+                    <Search className="mr-2 h-4 w-4" />
+                    Buscar
                   </TabsTrigger>
                 </TabsList>
 
@@ -205,7 +247,7 @@ export default function InventoryScanner() {
                     <Input
                       id="quantity"
                       type="number"
-                      min="1"
+                      min="0"
                       value={quantity}
                       onChange={(e) => setQuantity(Number(e.target.value))}
                       ref={quantityInputRef}
@@ -231,7 +273,7 @@ export default function InventoryScanner() {
 
                 <TabsContent value="manual" className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="barcode">Código de Barras</Label>
+                    <Label htmlFor="barcode">Código de Barras ou FLE</Label>
                     <div className="flex gap-2">
                       <Input
                         id="barcode"
@@ -247,13 +289,59 @@ export default function InventoryScanner() {
                     <Input
                       id="manualQuantity"
                       type="number"
-                      min="1"
+                      min="0"
                       value={quantity}
                       onChange={(e) => setQuantity(Number(e.target.value))}
                     />
                   </div>
 
-                  <Button onClick={handleManualAdd}>Adicionar Item</Button>
+                  <Button onClick={handleManualAdd}>Adicionar</Button>
+                </TabsContent>
+
+                <TabsContent value="search" className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="search">Buscar por Título ou Autor</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        id="search"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        placeholder="Digite para buscar..."
+                        onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                      />
+                      <Button onClick={handleSearch} disabled={isSearching}>
+                        <Search className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="searchQuantity">Quantidade</Label>
+                    <Input
+                      id="searchQuantity"
+                      type="number"
+                      min="0"
+                      value={quantity}
+                      onChange={(e) => setQuantity(Number(e.target.value))}
+                    />
+                  </div>
+
+                  {searchResults.length > 0 && (
+                    <div className="rounded-md border h-60 overflow-auto p-2">
+                      {searchResults.map((book) => (
+                        <div
+                          key={book.id}
+                          className="p-2 hover:bg-muted cursor-pointer rounded-sm"
+                          onClick={() => handleSelectSearchResult(book)}
+                        >
+                          <div className="font-medium">{book.title}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {book.author} | {book.codFle} | {book.publisher}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </TabsContent>
               </Tabs>
 
@@ -266,70 +354,46 @@ export default function InventoryScanner() {
             <CardFooter className="flex flex-col gap-2">
               <Button
                 variant="default"
-                onClick={() => setIsSaveBatchDialogOpen(true)}
-                disabled={isSaving || inventoryItems.length === 0}
+                onClick={saveUpdates}
+                disabled={isSaving || pendingUpdates.length === 0}
                 className="w-full"
               >
-                {isSaving ? "Salvando..." : "Salvar Inventário"}
+                {isSaving ? "Salvando..." : "Salvar Alterações"}
                 <Save className="ml-2 h-4 w-4" />
               </Button>
 
-              <div className="flex w-full gap-2">
-                <Button
-                  variant="outline"
-                  onClick={resetInventory}
-                  disabled={inventoryItems.length === 0}
-                  className="flex-1"
-                >
-                  <RefreshCw className="mr-2 h-4 w-4" />
-                  Limpar
-                </Button>
-
-                <Button
-                  variant="outline"
-                  onClick={() => setIsExportDialogOpen(true)}
-                  disabled={inventoryItems.length === 0}
-                  className="flex-1"
-                >
-                  <FileDown className="mr-2 h-4 w-4" />
-                  Exportar
-                </Button>
-              </div>
+              <Button
+                variant="outline"
+                onClick={resetUpdates}
+                disabled={pendingUpdates.length === 0}
+                className="w-full"
+              >
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Descartar Alterações
+              </Button>
             </CardFooter>
           </Card>
         </div>
 
-        {/* Coluna Direita - Lista de Itens */}
+        {/* Coluna Direita - Lista de Atualizações */}
         <div className="md:col-span-7">
           <Card className="h-full">
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle>Itens Escaneados</CardTitle>
+                <CardTitle>Atualizações Pendentes</CardTitle>
                 <Badge variant="outline">
-                  {inventoryItems.length} itens registrados
+                  {pendingUpdates.length} atualizações
                 </Badge>
               </div>
             </CardHeader>
             <CardContent>
               <ScrollArea className="h-[calc(100vh-300px)]">
-                <InventoryItemsList />
+                <UpdatesList />
               </ScrollArea>
             </CardContent>
           </Card>
         </div>
       </div>
-
-      {/* Dialog para exportação */}
-      <InventoryExport
-        open={isExportDialogOpen}
-        onOpenChange={setIsExportDialogOpen}
-      />
-
-      {/* Dialog para salvar lote */}
-      <SaveBatchDialog
-        open={isSaveBatchDialogOpen}
-        onOpenChange={setIsSaveBatchDialogOpen}
-      />
     </div>
   );
 }

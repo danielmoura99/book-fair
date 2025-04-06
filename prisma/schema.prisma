@@ -117,13 +117,3 @@ model InventoryBook {
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
 }
-
-model InventoryEntry {
-  id           String       @id @default(cuid())
-  inventoryBookId String
-  barcodeUsed   String?     // Código de barras que foi usado na leitura
-  quantity      Int         // Quantidade adicionada nesta entrada
-  batchName     String      // Nome do lote/entrada
-  createdAt     DateTime    @default(now())
-  createdBy     String?     // Nome do operador
-}

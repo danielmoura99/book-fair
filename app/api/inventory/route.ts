@@ -1,174 +1,190 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 //app/api/inventory/route.ts
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
-import { InventoryBook, InventoryEntry } from "@prisma/client";
-
-// Interfaces para tipagem
-interface InventoryBookWithEntries extends InventoryBook {
-  entries: InventoryEntry[];
-}
-
-interface EntryWithBook extends InventoryEntry {
-  inventoryBook: InventoryBook;
-}
 
 // GET - Buscar todos os livros no inventário
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-    const batchName = searchParams.get("batchName");
+    const publisher = searchParams.get("publisher");
+    const distributor = searchParams.get("distributor");
+    const filterZeroStock = searchParams.get("filterZeroStock") === "true";
 
-    // Se um lote específico for solicitado
-    if (batchName) {
-      const entries: any[] = await prisma.inventoryEntry.findMany({
-        where: {
-          batchName: batchName,
+    // Construir o filtro base
+    let where = {};
+
+    if (publisher) {
+      where = {
+        ...where,
+        publisher: {
+          contains: publisher,
+          mode: "insensitive",
         },
-        include: {
-          inventoryBook: true,
-        },
-      });
-
-      // Agrupar entradas por inventoryBook
-      const booksMap: Record<
-        string,
-        {
-          book: any;
-          quantity: number;
-          entries: InventoryEntry[];
-        }
-      > = {};
-
-      entries.forEach((entry: EntryWithBook) => {
-        const bookId = entry.inventoryBookId;
-
-        if (!booksMap[bookId]) {
-          booksMap[bookId] = {
-            book: {
-              ...entry.inventoryBook,
-              coverPrice: Number(entry.inventoryBook.coverPrice),
-              price: Number(entry.inventoryBook.price),
-            },
-            quantity: 0,
-            entries: [],
-          };
-        }
-
-        booksMap[bookId].quantity += entry.quantity;
-        booksMap[bookId].entries.push(entry);
-      });
-
-      const books = Object.values(booksMap);
-      return NextResponse.json(books);
+      };
     }
 
-    // Caso contrário, retornar todos os livros de inventário
+    if (distributor) {
+      where = {
+        ...where,
+        distributor: {
+          contains: distributor,
+          mode: "insensitive",
+        },
+      };
+    }
+
+    if (filterZeroStock) {
+      where = {
+        ...where,
+        quantity: {
+          gt: 0,
+        },
+      };
+    }
+
+    // Buscar livros no inventário
     const books = await prisma.inventoryBook.findMany({
+      where,
       orderBy: {
         title: "asc",
       },
-      include: {
-        entries: true,
-      },
+      take: 1000, // Limitar resultados para melhor performance
     });
 
-    // Serializar os dados antes de retornar
-    const serializedBooks = books.map((book: InventoryBookWithEntries) => ({
+    // Calcular estatísticas sobre o inventário
+    const stats = {
+      totalBooks: books.length,
+      totalQuantity: books.reduce((sum, book) => sum + book.quantity, 0),
+      publishers: books.filter(
+        (book, index, self) =>
+          self.findIndex((b) => b.publisher === book.publisher) === index
+      ).length,
+      distributors: books.filter(
+        (book, index, self) =>
+          self.findIndex((b) => b.distributor === book.distributor) === index
+      ).length,
+      inStock: books.filter((book) => book.quantity > 0).length,
+    };
+
+    // Serializar os dados decimais antes de retornar
+    const serializedBooks = books.map((book) => ({
       ...book,
       coverPrice: Number(book.coverPrice),
       price: Number(book.price),
     }));
 
-    return NextResponse.json(serializedBooks);
+    return NextResponse.json({
+      books: serializedBooks,
+      stats,
+    });
   } catch (error) {
     console.error("Erro ao buscar livros do inventário:", error);
+    const errorMessage =
+      error instanceof Error
+        ? error.message
+        : "Erro desconhecido ao buscar livros";
+
     return NextResponse.json(
-      { error: "Erro ao buscar livros do inventário" },
+      { error: "Erro ao buscar livros do inventário", message: errorMessage },
       { status: 500 }
     );
   }
 }
 
-// POST - Registrar lote de inventário
+// POST - Este método não é mais necessário para registrar lotes
+// Podemos adaptar para inserir um único livro no inventário, se necessário
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { batchName, items, operatorName } = body;
+    const { book } = body;
 
-    if (!batchName || !items || !Array.isArray(items) || items.length === 0) {
+    if (!book || !book.codFle || !book.title) {
       return NextResponse.json(
-        { error: "Dados de inventário inválidos" },
+        { error: "Dados do livro incompletos" },
         { status: 400 }
       );
     }
 
-    // Processar cada item do inventário em uma transação
-    const results = await prisma.$transaction(async (tx) => {
-      const processedItems = [];
-
-      for (const item of items) {
-        const { bookId, quantity, barcodeUsed } = item;
-
-        // Verificar se o livro existe no inventário
-        const inventoryBook = await tx.inventoryBook.findUnique({
-          where: { id: bookId },
-        });
-
-        if (!inventoryBook) {
-          console.warn(`Livro com ID ${bookId} não encontrado no inventário`);
-          continue; // Pular se o livro não for encontrado
-        }
-
-        // Atualizar a quantidade
-        const updatedBook = await tx.inventoryBook.update({
-          where: { id: inventoryBook.id },
-          data: {
-            quantity: {
-              increment: quantity,
-            },
-          },
-        });
-
-        // Registrar entrada no histórico de inventário
-        const entry = await tx.inventoryEntry.create({
-          data: {
-            inventoryBookId: inventoryBook.id,
-            barcodeUsed: barcodeUsed,
-            quantity: quantity,
-            batchName: batchName,
-            createdBy: operatorName || "Sistema",
-          },
-        });
-
-        processedItems.push({
-          book: {
-            ...updatedBook,
-            coverPrice: Number(updatedBook.coverPrice),
-            price: Number(updatedBook.price),
-          },
-          entry,
-        });
-      }
-
-      return processedItems;
+    // Verificar se o livro já existe
+    const existingBook = await prisma.inventoryBook.findUnique({
+      where: {
+        codFle: book.codFle,
+      },
     });
 
-    return NextResponse.json({
-      success: true,
-      message: `${results.length} itens processados com sucesso.`,
-      data: results,
-    });
+    let result;
+
+    if (existingBook) {
+      // Atualizar livro existente
+      result = await prisma.inventoryBook.update({
+        where: {
+          id: existingBook.id,
+        },
+        data: {
+          barCode: book.barCode || existingBook.barCode,
+          location: book.location || existingBook.location,
+          quantity: book.quantity ?? existingBook.quantity,
+          coverPrice: book.coverPrice
+            ? book.coverPrice.toString()
+            : existingBook.coverPrice,
+          price: book.price ? book.price.toString() : existingBook.price,
+          title: book.title || existingBook.title,
+          author: book.author || existingBook.author,
+          medium: book.medium || existingBook.medium,
+          publisher: book.publisher || existingBook.publisher,
+          distributor: book.distributor || existingBook.distributor,
+          subject: book.subject || existingBook.subject,
+          updatedAt: new Date(),
+        },
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: "Livro atualizado com sucesso",
+        data: {
+          ...result,
+          coverPrice: Number(result.coverPrice),
+          price: Number(result.price),
+        },
+      });
+    } else {
+      // Criar novo livro
+      result = await prisma.inventoryBook.create({
+        data: {
+          codFle: book.codFle,
+          barCode: book.barCode,
+          location: book.location || "ESTOQUE",
+          quantity: book.quantity || 0,
+          coverPrice: book.coverPrice ? book.coverPrice.toString() : "0",
+          price: book.price ? book.price.toString() : "0",
+          title: book.title,
+          author: book.author || "Não informado",
+          medium: book.medium || "Não informado",
+          publisher: book.publisher || "Não informado",
+          distributor: book.distributor || "Não informado",
+          subject: book.subject || "Não informado",
+        },
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: "Livro criado com sucesso",
+        data: {
+          ...result,
+          coverPrice: Number(result.coverPrice),
+          price: Number(result.price),
+        },
+      });
+    }
   } catch (error) {
-    console.error("Erro ao registrar inventário:", error);
-
+    console.error("Erro ao processar livro:", error);
     const errorMessage =
       error instanceof Error
         ? error.message
-        : "Erro desconhecido ao registrar inventário";
+        : "Erro desconhecido ao processar livro";
 
     return NextResponse.json(
-      { error: "Erro ao registrar inventário", message: errorMessage },
+      { error: "Erro ao processar livro", message: errorMessage },
       { status: 500 }
     );
   }
