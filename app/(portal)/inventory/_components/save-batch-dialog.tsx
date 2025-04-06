@@ -1,7 +1,7 @@
-//app/(portal)/inventory/_components/save-batch-dialog.tsx
+//app/(portal)/inventory/_components/save-updates-dialog.tsx
 "use client";
 
-import { useState } from "react";
+//import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -11,59 +11,24 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useInventory } from "./inventory-context";
 import { Loader2 } from "lucide-react";
+import { useInventory } from "./inventory-context";
 
-// Lista comum de editoras/lotes
-const COMMON_PUBLISHERS = [
-  "DEVL FEB", // FEB
-  "DEVL BOA NOVA", // Boa Nova
-  "DEVL EME", // EME
-  "DEVL PETIT", // Petit
-  "DEVL LEAL", // Leal
-  "DEVL IDE", // IDE
-  "DEVL INTELITERA", // Intelitera
-  "DEVL CEAC", // CEAC
-  "OUTROS", // Outros
-];
-
-interface SaveBatchDialogProps {
+interface SaveUpdatesDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export function SaveBatchDialog({ open, onOpenChange }: SaveBatchDialogProps) {
-  const { saveBatch, isSaving } = useInventory();
-  const [batchType, setBatchType] = useState<"common" | "custom">("common");
-  const [selectedBatch, setSelectedBatch] = useState("");
-  const [customBatch, setCustomBatch] = useState("");
+export function SaveUpdatesDialog({
+  open,
+  onOpenChange,
+}: SaveUpdatesDialogProps) {
+  const { saveUpdates, isSaving, pendingUpdates } = useInventory();
 
   const handleSave = async () => {
-    let batchName = "";
-
-    if (batchType === "common") {
-      batchName = selectedBatch;
-    } else {
-      batchName = customBatch;
-    }
-
-    if (!batchName) return;
-
-    const success = await saveBatch(batchName);
+    const success = await saveUpdates();
     if (success) {
       onOpenChange(false);
-      // Resetar os valores do formulário
-      setSelectedBatch("");
-      setCustomBatch("");
     }
   };
 
@@ -71,58 +36,26 @@ export function SaveBatchDialog({ open, onOpenChange }: SaveBatchDialogProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Salvar Inventário</DialogTitle>
+          <DialogTitle>Salvar Atualizações</DialogTitle>
           <DialogDescription>
-            Selecione o lote para agrupar os itens escaneados
+            Confirme para salvar todas as atualizações de quantidade no
+            inventário.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-2 gap-4">
-            <Button
-              variant={batchType === "common" ? "default" : "outline"}
-              onClick={() => setBatchType("common")}
-            >
-              Lotes Comuns
-            </Button>
-            <Button
-              variant={batchType === "custom" ? "default" : "outline"}
-              onClick={() => setBatchType("custom")}
-            >
-              Lote Personalizado
-            </Button>
+        <div className="py-4">
+          <div className="rounded-md bg-muted p-4">
+            <h3 className="mb-2 text-sm font-medium">Resumo das alterações</h3>
+            <p className="text-sm">
+              Você está prestes a atualizar as quantidades de{" "}
+              {pendingUpdates.length}
+              {pendingUpdates.length === 1 ? " item" : " itens"} no inventário.
+            </p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Esta ação não pode ser desfeita. Confirme apenas se você tem
+              certeza das quantidades informadas.
+            </p>
           </div>
-
-          {batchType === "common" ? (
-            <div className="space-y-2">
-              <Label htmlFor="batch">Selecionar Lote</Label>
-              <Select value={selectedBatch} onValueChange={setSelectedBatch}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione um lote" />
-                </SelectTrigger>
-                <SelectContent>
-                  {COMMON_PUBLISHERS.map((publisher) => (
-                    <SelectItem key={publisher} value={publisher}>
-                      {publisher}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              <Label htmlFor="customBatch">Nome do Lote</Label>
-              <Input
-                id="customBatch"
-                value={customBatch}
-                onChange={(e) => setCustomBatch(e.target.value.toUpperCase())}
-                placeholder="Ex: DEVL ESPECIAL"
-              />
-              <p className="text-sm text-muted-foreground">
-                Recomendamos usar o prefixo DEVL para manter o padrão.
-              </p>
-            </div>
-          )}
         </div>
 
         <DialogFooter>
@@ -135,11 +68,7 @@ export function SaveBatchDialog({ open, onOpenChange }: SaveBatchDialogProps) {
           </Button>
           <Button
             onClick={handleSave}
-            disabled={
-              isSaving ||
-              (batchType === "common" && !selectedBatch) ||
-              (batchType === "custom" && !customBatch)
-            }
+            disabled={isSaving || pendingUpdates.length === 0}
           >
             {isSaving ? (
               <>
@@ -147,7 +76,7 @@ export function SaveBatchDialog({ open, onOpenChange }: SaveBatchDialogProps) {
                 Salvando...
               </>
             ) : (
-              "Salvar Inventário"
+              "Confirmar Atualizações"
             )}
           </Button>
         </DialogFooter>

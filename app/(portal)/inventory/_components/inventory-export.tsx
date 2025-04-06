@@ -22,7 +22,7 @@ interface InventoryExportProps {
 }
 
 export function InventoryExport({ open, onOpenChange }: InventoryExportProps) {
-  const { inventoryItems } = useInventory();
+  const { pendingUpdates } = useInventory();
   const { toast } = useToast();
   const [exporting, setExporting] = useState(false);
 
@@ -32,29 +32,30 @@ export function InventoryExport({ open, onOpenChange }: InventoryExportProps) {
       setExporting(true);
 
       // Formatar dados para Excel
-      const excelData = inventoryItems.map((item) => ({
-        "Código FLE": item.book.codFle,
-        "Código de Barras": item.barcodeUsed,
-        Título: item.book.title,
-        Autor: item.book.author,
-        Médium: item.book.medium,
-        Editora: item.book.publisher,
-        Distribuidor: item.book.distributor,
-        Assunto: item.book.subject,
-        Local: item.book.location,
-        Quantidade: item.quantity,
-        "Preço Feira": item.book.coverPrice,
-        "Preço Capa": item.book.price,
+      const excelData = pendingUpdates.map((update) => ({
+        "Código FLE": update.book.codFle,
+        "Código de Barras": update.book.barCode || "",
+        Título: update.book.title,
+        Autor: update.book.author,
+        Médium: update.book.medium,
+        Editora: update.book.publisher,
+        Distribuidor: update.book.distributor,
+        Assunto: update.book.subject,
+        Local: update.book.location,
+        "Quantidade Atual": update.previousQuantity,
+        "Nova Quantidade": update.newQuantity,
+        "Preço Feira": update.book.coverPrice,
+        "Preço Capa": update.book.price,
       }));
 
       // Criar workbook
       const worksheet = XLSX.utils.json_to_sheet(excelData);
       const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Inventário");
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Atualizações");
 
       // Formatar data para nome do arquivo
       const date = new Date().toISOString().split("T")[0];
-      const fileName = `inventario_${date}.xlsx`;
+      const fileName = `atualizacoes_inventario_${date}.xlsx`;
 
       // Gerar arquivo
       XLSX.writeFile(workbook, fileName);
@@ -81,35 +82,31 @@ export function InventoryExport({ open, onOpenChange }: InventoryExportProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Exportar Inventário</DialogTitle>
+          <DialogTitle>Exportar Atualizações</DialogTitle>
           <DialogDescription>
-            Escolha como deseja exportar os dados do inventário atual.
+            Escolha como deseja exportar as atualizações pendentes.
           </DialogDescription>
         </DialogHeader>
 
         <div className="grid gap-6 py-4">
           <div className="space-y-2">
-            <h3 className="text-sm font-medium">Resumo do Inventário</h3>
+            <h3 className="text-sm font-medium">Resumo das Atualizações</h3>
             <p className="text-sm text-muted-foreground">
-              Total de itens:{" "}
-              <span className="font-medium">{inventoryItems.length}</span> |
-              Total de unidades:{" "}
-              <span className="font-medium">
-                {inventoryItems.reduce((sum, item) => sum + item.quantity, 0)}
-              </span>
+              Total de atualizações:{" "}
+              <span className="font-medium">{pendingUpdates.length}</span>
             </p>
           </div>
 
           <div className="border rounded-md p-4 space-y-2">
             <h3 className="text-sm font-medium">Exportar para Excel</h3>
             <p className="text-sm text-muted-foreground">
-              Gera um arquivo Excel com todos os itens escaneados, que pode ser
-              importado posteriormente ou compartilhado.
+              Gera um arquivo Excel com todas as atualizações pendentes que
+              podem ser compartilhadas.
             </p>
             <Button
               variant="outline"
               onClick={handleExportToExcel}
-              disabled={exporting}
+              disabled={exporting || pendingUpdates.length === 0}
               className="w-full"
             >
               {exporting ? (

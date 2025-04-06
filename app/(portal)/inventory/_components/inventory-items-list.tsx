@@ -16,18 +16,19 @@ import { Search, Trash2, Edit, Check, X, BookOpen } from "lucide-react";
 import { useInventory } from "./inventory-context";
 
 export function InventoryItemsList() {
-  const { inventoryItems, updateItemQuantity, removeInventoryItem } =
-    useInventory();
+  const { pendingUpdates, addUpdate, removeUpdate } = useInventory();
   const [searchTerm, setSearchTerm] = useState("");
   const [editItemId, setEditItemId] = useState<string | null>(null);
   const [editQuantity, setEditQuantity] = useState<number>(0);
 
   // Filtragem de itens
-  const filteredItems = inventoryItems.filter(
+  const filteredItems = pendingUpdates.filter(
     (item) =>
       item.book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.book.codFle.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.barcodeUsed.toLowerCase().includes(searchTerm.toLowerCase())
+      (item.book.barCode?.toLowerCase() || "").includes(
+        searchTerm.toLowerCase()
+      )
   );
 
   const handleStartEdit = (bookId: string, currentQuantity: number) => {
@@ -36,17 +37,20 @@ export function InventoryItemsList() {
   };
 
   const handleSaveEdit = (bookId: string) => {
-    updateItemQuantity(bookId, editQuantity);
+    const item = pendingUpdates.find((update) => update.bookId === bookId);
+    if (item) {
+      addUpdate(item.book, editQuantity);
+    }
     setEditItemId(null);
   };
 
-  if (inventoryItems.length === 0) {
+  if (pendingUpdates.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-[300px] p-4 text-center">
         <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
-        <h3 className="text-xl font-medium">Nenhum item registrado</h3>
+        <h3 className="text-xl font-medium">Nenhuma atualização pendente</h3>
         <p className="text-muted-foreground">
-          Use o scanner ou a entrada manual para adicionar livros ao inventário
+          Use o scanner ou a busca para adicionar livros ao inventário
         </p>
       </div>
     );
@@ -72,7 +76,10 @@ export function InventoryItemsList() {
                 <TableHead className="w-[100px]">Código FLE</TableHead>
                 <TableHead>Título</TableHead>
                 <TableHead className="text-center w-[120px]">
-                  Quantidade
+                  Qtd. Atual
+                </TableHead>
+                <TableHead className="text-center w-[120px]">
+                  Nova Qtd.
                 </TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
@@ -83,7 +90,7 @@ export function InventoryItemsList() {
                   <TableCell className="font-medium">
                     <div>{item.book.codFle}</div>
                     <div className="text-xs text-muted-foreground">
-                      {item.barcodeUsed}
+                      {item.book.barCode || "Sem código de barras"}
                     </div>
                   </TableCell>
                   <TableCell>
@@ -93,11 +100,14 @@ export function InventoryItemsList() {
                     </div>
                   </TableCell>
                   <TableCell className="text-center">
+                    {item.previousQuantity}
+                  </TableCell>
+                  <TableCell className="text-center">
                     {editItemId === item.bookId ? (
                       <div className="flex items-center space-x-2">
                         <Input
                           type="number"
-                          min="1"
+                          min="0"
                           value={editQuantity}
                           onChange={(e) =>
                             setEditQuantity(Number(e.target.value))
@@ -122,7 +132,7 @@ export function InventoryItemsList() {
                         </Button>
                       </div>
                     ) : (
-                      <span className="font-medium">{item.quantity}</span>
+                      <span className="font-medium">{item.newQuantity}</span>
                     )}
                   </TableCell>
                   <TableCell className="text-right">
@@ -131,7 +141,7 @@ export function InventoryItemsList() {
                         variant="ghost"
                         size="icon"
                         onClick={() =>
-                          handleStartEdit(item.bookId, item.quantity)
+                          handleStartEdit(item.bookId, item.newQuantity)
                         }
                       >
                         <Edit className="h-4 w-4" />
@@ -139,7 +149,7 @@ export function InventoryItemsList() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => removeInventoryItem(item.bookId)}
+                        onClick={() => removeUpdate(item.bookId)}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -160,8 +170,7 @@ export function InventoryItemsList() {
       )}
 
       <div className="text-sm text-muted-foreground">
-        Total: {filteredItems.reduce((sum, item) => sum + item.quantity, 0)}{" "}
-        livros em {filteredItems.length} títulos diferentes
+        Total: {filteredItems.length} atualizações pendentes
       </div>
     </div>
   );
