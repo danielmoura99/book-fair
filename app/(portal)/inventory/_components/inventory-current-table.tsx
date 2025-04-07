@@ -18,6 +18,8 @@ import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import axios from "axios";
 import { formatPrice } from "@/lib/utils";
+import { ZeroInventoryButton } from "./zero-inventory-button";
+import { ExportInventoryButton } from "./export-inventory-button";
 
 interface InventoryBook {
   id: string;
@@ -86,88 +88,103 @@ export function InventoryCurrentTable() {
     setFilteredBooks(filtered);
   }, [searchTerm, books]);
 
+  const handleInventoryZeroed = () => {
+    fetchInventoryData();
+  };
+
   return (
-    <Card className="p-4">
-      <div className="flex items-center justify-between mb-4">
+    <Card className="p-3 shadow-sm">
+      <div className="flex items-center justify-between mb-2">
         <div className="relative w-full max-w-sm">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3 w-3 text-muted-foreground" />
           <Input
-            placeholder="Buscar no inventário..."
+            placeholder="Buscar livro..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
+            className="pl-7 h-7 text-xs"
           />
         </div>
-        <Button
-          variant="outline"
-          onClick={fetchInventoryData}
-          disabled={loading}
-          className="ml-2"
-        >
-          {loading ? (
-            <RefreshCw className="h-4 w-4 animate-spin" />
-          ) : (
-            <RefreshCw className="h-4 w-4" />
-          )}
-          <span className="ml-2 hidden sm:inline">Atualizar</span>
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={fetchInventoryData}
+            disabled={loading}
+            className="h-7 text-xs"
+          >
+            {loading ? (
+              <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
+            ) : (
+              <RefreshCw className="h-3 w-3 mr-1" />
+            )}
+            Atualizar
+          </Button>
+          <ExportInventoryButton />
+          <ZeroInventoryButton onSuccess={handleInventoryZeroed} />
+        </div>
       </div>
 
-      <ScrollArea className="h-[400px] w-full rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[100px]">Código FLE</TableHead>
-              <TableHead className="min-w-[300px]">Título</TableHead>
-              <TableHead>Editora</TableHead>
-              <TableHead>Distribuidor</TableHead>
-              <TableHead className="text-right w-[80px]">Quantidade</TableHead>
-              <TableHead className="text-right w-[120px]">
-                Preço Feira
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredBooks.length === 0 && !loading ? (
+      {/* ScrollArea com altura fixa para a tabela de inventário */}
+      <div className="rounded-md border">
+        <ScrollArea className="h-[800px]">
+          <Table>
+            <TableHeader className="sticky top-0 bg-background">
               <TableRow>
-                <TableCell colSpan={6} className="h-24 text-center">
-                  {searchTerm
-                    ? "Nenhum livro encontrado para esta busca"
-                    : "Nenhum livro no inventário"}
-                </TableCell>
+                <TableHead className="w-[80px]">Código FLE</TableHead>
+                <TableHead className="min-w-[200px]">Título</TableHead>
+                <TableHead>Editora</TableHead>
+                <TableHead>Distribuidor</TableHead>
+                <TableHead className="text-right w-[60px]">
+                  Quantidade
+                </TableHead>
+                <TableHead className="text-right w-[80px]">
+                  Preço Feira
+                </TableHead>
               </TableRow>
-            ) : (
-              filteredBooks.map((book) => (
-                <TableRow key={book.id}>
-                  <TableCell className="font-medium">
-                    {book.codFle}
-                    {book.barCode && (
-                      <div className="text-xs text-muted-foreground">
-                        {book.barCode}
-                      </div>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <div className="font-medium">{book.title}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {book.author}
-                    </div>
-                  </TableCell>
-                  <TableCell>{book.publisher}</TableCell>
-                  <TableCell>{book.distributor}</TableCell>
-                  <TableCell className="text-right font-medium">
-                    {book.quantity}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {formatPrice(book.coverPrice)}
+            </TableHeader>
+            <TableBody>
+              {filteredBooks.length === 0 && !loading ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="h-24 text-center">
+                    {searchTerm
+                      ? "Nenhum livro encontrado para esta busca"
+                      : "Nenhum livro no inventário"}
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-        <ScrollBar orientation="horizontal" />
-      </ScrollArea>
+              ) : (
+                [...filteredBooks]
+                  .sort((a, b) => b.quantity - a.quantity)
+                  .map((book) => (
+                    <TableRow key={book.id}>
+                      <TableCell className="font-medium">
+                        {book.codFle}
+                        {book.barCode && (
+                          <div className="text-xs text-muted-foreground">
+                            {book.barCode}
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="font-medium">{book.title}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {book.author}
+                        </div>
+                      </TableCell>
+                      <TableCell>{book.publisher}</TableCell>
+                      <TableCell>{book.distributor}</TableCell>
+                      <TableCell className="text-right font-medium">
+                        {book.quantity}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {formatPrice(book.coverPrice)}
+                      </TableCell>
+                    </TableRow>
+                  ))
+              )}
+            </TableBody>
+          </Table>
+          <ScrollBar orientation="horizontal" />
+        </ScrollArea>
+      </div>
 
       <div className="mt-2 text-sm text-muted-foreground">
         {loading

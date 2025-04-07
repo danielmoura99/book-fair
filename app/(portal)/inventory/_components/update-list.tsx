@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Trash2, Edit, Check, X } from "lucide-react";
+import { Search, Trash2, Edit, Check, X, BookOpen } from "lucide-react";
 import { useInventory } from "./inventory-context";
 
 export function UpdatesList() {
@@ -75,10 +75,10 @@ export function UpdatesList() {
               <TableRow>
                 <TableHead className="w-[100px]">Código FLE</TableHead>
                 <TableHead>Título</TableHead>
-                <TableHead className="text-center w-[100px]">
+                <TableHead className="text-center w-[60px]">
                   Qtd. Atual
                 </TableHead>
-                <TableHead className="text-center w-[120px]">
+                <TableHead className="text-center w-[60px]">
                   Nova Qtd.
                 </TableHead>
                 <TableHead className="text-right">Ações</TableHead>
@@ -112,7 +112,7 @@ export function UpdatesList() {
                           onChange={(e) =>
                             setEditQuantity(Number(e.target.value))
                           }
-                          className="w-20 h-8 text-sm"
+                          className="w-16 h-8 text-sm"
                         />
                         <Button
                           size="icon"
@@ -161,10 +161,17 @@ export function UpdatesList() {
           </Table>
         </div>
       ) : (
-        <div className="p-8 text-center">
-          <p className="text-muted-foreground">
-            Nenhum item encontrado para {searchTerm}. Tente outro termo de
-            busca.
+        <div className="flex flex-col items-center justify-center p-8 text-center">
+          <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
+          <h3 className="text-base font-medium">
+            {searchTerm
+              ? "Nenhum resultado encontrado"
+              : "Nenhuma atualização pendente"}
+          </h3>
+          <p className="text-muted-foreground text-sm">
+            {searchTerm
+              ? "Tente outro termo de busca"
+              : "Use o scanner ou a busca manual para adicionar livros e atualizar quantidades"}
           </p>
         </div>
       )}

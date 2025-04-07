@@ -18,11 +18,12 @@ import { Barcode, CheckCircle, Save, Search, RefreshCw } from "lucide-react";
 import { useInventory } from "./inventory-context";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import axios from "axios";
 import { UpdatesList } from "./update-list";
+import { InventoryCurrentTable } from "./inventory-current-table";
 
 export default function InventoryScanner() {
   const {
@@ -185,17 +186,17 @@ export default function InventoryScanner() {
   const { toast } = useToast();
 
   return (
-    <div className="flex-1 p-8">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold">Inventário de Livros</h1>
+    <div className="flex-1 p-4">
+      <div className="mb-4">
+        <h1 className="text-xl font-bold">Inventário de Livros</h1>
         <p className="text-muted-foreground">
           Atualize as quantidades dos livros no catálogo
         </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-12">
-        {/* Coluna Esquerda - Scanner e Controles */}
-        <div className="md:col-span-5 space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Coluna esquerda - Scanner e controles (sem scroll próprio) */}
+        <div>
           <Card>
             <CardHeader>
               <CardTitle>Atualização de Estoque</CardTitle>
@@ -375,9 +376,9 @@ export default function InventoryScanner() {
           </Card>
         </div>
 
-        {/* Coluna Direita - Lista de Atualizações */}
-        <div className="md:col-span-7">
-          <Card className="h-full">
+        {/* Coluna direita - Lista de atualizações COM ScrollArea de altura fixa */}
+        <div>
+          <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>Atualizações Pendentes</CardTitle>
@@ -387,12 +388,20 @@ export default function InventoryScanner() {
               </div>
             </CardHeader>
             <CardContent>
-              <ScrollArea className="h-[calc(100vh-300px)]">
+              {/* ScrollArea com altura fixa para a lista de atualizações */}
+              <ScrollArea className="h-[400px] pr-4">
                 <UpdatesList />
+                <ScrollBar />
               </ScrollArea>
             </CardContent>
           </Card>
         </div>
+      </div>
+
+      {/* A tabela de inventário abaixo (sem scroll próprio) */}
+      <div className="mt-8">
+        <h2 className="text-lg font-semibold mb-2">Inventário Atual</h2>
+        <InventoryCurrentTable />
       </div>
     </div>
   );
