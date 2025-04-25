@@ -1,6 +1,7 @@
 //app/api/inventory/route.ts
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { logInventoryActivity } from "@/lib/inventory-Logger";
 
 // GET - Buscar todos os livros no inventário
 export async function GET(req: Request) {
@@ -91,12 +92,11 @@ export async function GET(req: Request) {
   }
 }
 
-// POST - Este método não é mais necessário para registrar lotes
-// Podemos adaptar para inserir um único livro no inventário, se necessário
+// POST - Criar ou atualizar um livro no inventário
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { book } = body;
+    const { book, operatorName } = body;
 
     if (!book || !book.codFle || !book.title) {
       return NextResponse.json(
@@ -115,6 +115,22 @@ export async function POST(req: Request) {
     let result;
 
     if (existingBook) {
+      // Dados anteriores para log
+      const previousData = {
+        codFle: existingBook.codFle,
+        barCode: existingBook.barCode,
+        location: existingBook.location,
+        quantity: existingBook.quantity,
+        coverPrice: Number(existingBook.coverPrice),
+        price: Number(existingBook.price),
+        title: existingBook.title,
+        author: existingBook.author,
+        medium: existingBook.medium,
+        publisher: existingBook.publisher,
+        distributor: existingBook.distributor,
+        subject: existingBook.subject,
+      };
+
       // Atualizar livro existente
       result = await prisma.inventoryBook.update({
         where: {
@@ -138,14 +154,29 @@ export async function POST(req: Request) {
         },
       });
 
-      return NextResponse.json({
-        success: true,
-        message: "Livro atualizado com sucesso",
-        data: {
-          ...result,
+      // Registrar log de atualização
+      await logInventoryActivity({
+        type: "UPDATE",
+        bookId: result.id,
+        bookCodFle: result.codFle,
+        bookTitle: result.title,
+        operatorName: operatorName || "Sistema",
+        previousData,
+        newData: {
+          codFle: result.codFle,
+          barCode: result.barCode,
+          location: result.location,
+          quantity: result.quantity,
           coverPrice: Number(result.coverPrice),
           price: Number(result.price),
+          title: result.title,
+          author: result.author,
+          medium: result.medium,
+          publisher: result.publisher,
+          distributor: result.distributor,
+          subject: result.subject,
         },
+        notes: "Atualização via API de criação",
       });
     } else {
       // Criar novo livro
@@ -166,16 +197,41 @@ export async function POST(req: Request) {
         },
       });
 
-      return NextResponse.json({
-        success: true,
-        message: "Livro criado com sucesso",
-        data: {
-          ...result,
+      // Registrar log de criação
+      await logInventoryActivity({
+        type: "CREATE",
+        bookId: result.id,
+        bookCodFle: result.codFle,
+        bookTitle: result.title,
+        operatorName: operatorName || "Sistema",
+        newData: {
+          codFle: result.codFle,
+          barCode: result.barCode,
+          location: result.location,
+          quantity: result.quantity,
           coverPrice: Number(result.coverPrice),
           price: Number(result.price),
+          title: result.title,
+          author: result.author,
+          medium: result.medium,
+          publisher: result.publisher,
+          distributor: result.distributor,
+          subject: result.subject,
         },
       });
     }
+
+    return NextResponse.json({
+      success: true,
+      message: existingBook
+        ? "Livro atualizado com sucesso"
+        : "Livro criado com sucesso",
+      data: {
+        ...result,
+        coverPrice: Number(result.coverPrice),
+        price: Number(result.price),
+      },
+    });
   } catch (error) {
     console.error("Erro ao processar livro:", error);
     const errorMessage =

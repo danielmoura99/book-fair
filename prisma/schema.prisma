@@ -17,6 +17,14 @@ enum CashRegisterStatus {
   CLOSED
 }
 
+enum InventoryLogType {
+  CREATE
+  UPDATE
+  DELETE
+}
+
+
+
 model Book {
   id         String   @id @default(cuid())
   codFle     String   @unique // Código FLE
@@ -116,4 +124,17 @@ model InventoryBook {
   subject      String       // Assunto
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
+}
+
+model InventoryLog {
+  id           String          @id @default(cuid())
+  type         InventoryLogType
+  bookId       String
+  bookCodFle   String
+  bookTitle    String
+  operatorName String?         // Nome da pessoa que realizou a ação
+  previousData Json?           // Dados anteriores (para UPDATE)
+  newData      Json            // Dados atuais/novos
+  timestamp    DateTime        @default(now())
+  notes        String?         // Observações adicionais
 }

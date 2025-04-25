@@ -24,6 +24,8 @@ import { useToast } from "@/hooks/use-toast";
 import axios from "axios";
 import { UpdatesList } from "./update-list";
 import { InventoryCurrentTable } from "./inventory-current-table";
+import { FileText } from "lucide-react";
+import Link from "next/link";
 
 export default function InventoryScanner() {
   const {
@@ -187,11 +189,15 @@ export default function InventoryScanner() {
 
   return (
     <div className="flex-1 p-4">
-      <div className="mb-4">
+      <div className="mb-4 flex items-center justify-between">
         <h1 className="text-xl font-bold">Inventário de Livros</h1>
-        <p className="text-muted-foreground">
-          Atualize as quantidades dos livros no catálogo
-        </p>
+
+        <Link href="/inventory/logs">
+          <Button variant="outline" className="flex items-right gap-2">
+            <FileText className="h-4 w-4" />
+            Histórico de Logs
+          </Button>
+        </Link>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

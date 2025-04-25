@@ -91,6 +91,7 @@ export function AddInventoryBookDialog({
           coverPrice: data.coverPrice.toString(),
           price: data.price.toString(),
         },
+        operatorName: "Usuário Atual",
       });
 
       toast({

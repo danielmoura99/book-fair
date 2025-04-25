@@ -1,6 +1,7 @@
 // app/api/inventory/[id]/route.ts
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { logInventoryActivity } from "@/lib/inventory-Logger";
 
 // PATCH - Atualizar um livro específico
 export async function PATCH(
@@ -9,7 +10,7 @@ export async function PATCH(
 ) {
   try {
     const { id } = params;
-    const { book } = await req.json();
+    const { book, operatorName } = await req.json();
 
     // Verificar se o livro existe
     const existingBook = await prisma.inventoryBook.findUnique({
@@ -22,6 +23,22 @@ export async function PATCH(
         { status: 404 }
       );
     }
+
+    // Dados anteriores para log
+    const previousData = {
+      codFle: existingBook.codFle,
+      barCode: existingBook.barCode,
+      location: existingBook.location,
+      quantity: existingBook.quantity,
+      coverPrice: Number(existingBook.coverPrice),
+      price: Number(existingBook.price),
+      title: existingBook.title,
+      author: existingBook.author,
+      medium: existingBook.medium,
+      publisher: existingBook.publisher,
+      distributor: existingBook.distributor,
+      subject: existingBook.subject,
+    };
 
     // Atualizar o livro
     const updatedBook = await prisma.inventoryBook.update({
@@ -40,6 +57,30 @@ export async function PATCH(
         distributor: book.distributor,
         subject: book.subject,
         updatedAt: new Date(),
+      },
+    });
+
+    // Registrar log de atualização
+    await logInventoryActivity({
+      type: "UPDATE",
+      bookId: updatedBook.id,
+      bookCodFle: updatedBook.codFle,
+      bookTitle: updatedBook.title,
+      operatorName: operatorName || "Sistema",
+      previousData,
+      newData: {
+        codFle: updatedBook.codFle,
+        barCode: updatedBook.barCode,
+        location: updatedBook.location,
+        quantity: updatedBook.quantity,
+        coverPrice: Number(updatedBook.coverPrice),
+        price: Number(updatedBook.price),
+        title: updatedBook.title,
+        author: updatedBook.author,
+        medium: updatedBook.medium,
+        publisher: updatedBook.publisher,
+        distributor: updatedBook.distributor,
+        subject: updatedBook.subject,
       },
     });
 
@@ -74,6 +115,8 @@ export async function DELETE(
 ) {
   try {
     const { id } = params;
+    const url = new URL(req.url);
+    const operatorName = url.searchParams.get("operatorName") || "Sistema";
 
     // Verificar se o livro existe
     const existingBook = await prisma.inventoryBook.findUnique({
@@ -87,9 +130,35 @@ export async function DELETE(
       );
     }
 
+    // Dados para log
+    const bookData = {
+      codFle: existingBook.codFle,
+      barCode: existingBook.barCode,
+      location: existingBook.location,
+      quantity: existingBook.quantity,
+      coverPrice: Number(existingBook.coverPrice),
+      price: Number(existingBook.price),
+      title: existingBook.title,
+      author: existingBook.author,
+      medium: existingBook.medium,
+      publisher: existingBook.publisher,
+      distributor: existingBook.distributor,
+      subject: existingBook.subject,
+    };
+
     // Excluir o livro
     await prisma.inventoryBook.delete({
       where: { id },
+    });
+
+    // Registrar log de exclusão
+    await logInventoryActivity({
+      type: "DELETE",
+      bookId: id,
+      bookCodFle: existingBook.codFle,
+      bookTitle: existingBook.title,
+      operatorName,
+      newData: bookData,
     });
 
     return NextResponse.json({
