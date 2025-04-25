@@ -75,21 +75,24 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
       const existingIndex = prev.findIndex((item) => item.bookId === book.id);
 
       if (existingIndex >= 0) {
-        // Atualizar a quantidade se o livro já existe
+        // Atualizar a quantidade se o livro já existe na lista de atualizações
+        // Somando a nova quantidade com a quantidade que já está sendo adicionada
         const updatedItems = [...prev];
         updatedItems[existingIndex] = {
           ...updatedItems[existingIndex],
-          newQuantity,
+          newQuantity:
+            updatedItems[existingIndex].previousQuantity + newQuantity,
         };
         return updatedItems;
       } else {
         // Adicionar nova atualização
+        // Somando a quantidade atual do livro com a nova quantidade
         return [
           ...prev,
           {
             bookId: book.id,
             book,
-            newQuantity,
+            newQuantity: book.quantity + newQuantity,
             previousQuantity: book.quantity,
           },
         ];
@@ -98,7 +101,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
 
     toast({
       title: "Atualização adicionada",
-      description: `${book.title} - Quantidade: ${newQuantity}`,
+      description: `${book.title} - Adicionado ${newQuantity} ao estoque atual`,
     });
   };
 
