@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 //app/(portal)/transactions/_components/transaction-form.tsx
 "use client";
 
@@ -145,7 +146,6 @@ export function TransactionForm({ onSuccess }: { onSuccess?: () => void }) {
     0
   );
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     if (!isCashRegisterOpen) {
       setError("O caixa precisa estar aberto para registrar vendas");
@@ -161,8 +161,7 @@ export function TransactionForm({ onSuccess }: { onSuccess?: () => void }) {
       Math.round(payments.reduce((sum, p) => sum + p.amount, 0) * 100) / 100;
     const roundedTotal = Math.round(totalAmount * 100) / 100;
 
-    // Usar uma pequena tolerância para a comparação
-    const EPSILON = 0.01; // 1 centavo de tolerância
+    const EPSILON = 0.01;
     if (Math.abs(paymentSum - roundedTotal) > EPSILON) {
       setError(
         "O valor total dos pagamentos não corresponde ao valor da venda"
@@ -174,20 +173,17 @@ export function TransactionForm({ onSuccess }: { onSuccess?: () => void }) {
       setLoading(true);
       setError(null);
 
-      await Promise.all(
-        cartItems.map((item) =>
-          axios.post("/api/transactions", {
-            bookId: item.bookId,
-            quantity: item.quantity,
-            operatorName: selectedOperator,
-            totalAmount: (
-              Number(item.book.coverPrice) * item.quantity
-            ).toString(),
-            date: new Date().toISOString(),
-            payments: payments,
-          })
-        )
-      );
+      await axios.post("/api/transactions/bulk", {
+        items: cartItems.map((item) => ({
+          bookId: item.bookId,
+          quantity: item.quantity,
+          itemTotal: (Number(item.book.coverPrice) * item.quantity).toString(),
+        })),
+        totalAmount: totalAmount.toString(),
+        operatorName: selectedOperator,
+        payments: payments,
+        date: new Date().toISOString(),
+      });
 
       router.refresh();
       onSuccess?.();
@@ -205,16 +201,15 @@ export function TransactionForm({ onSuccess }: { onSuccess?: () => void }) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         {error && (
           <Alert variant="destructive">
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Coluna Esquerda */}
-          <div className="space-y-6">
+        <div className="flex flex-col lg:grid lg:grid-cols-2 gap-4">
+          <div className="space-y-4">
             <OperatorSelector
               selectedOperator={selectedOperator}
               onOperatorSelect={(name) => {
@@ -233,17 +228,17 @@ export function TransactionForm({ onSuccess }: { onSuccess?: () => void }) {
               <Card className="p-4">
                 <Tabs defaultValue="scanner">
                   <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="scanner">
-                      <Barcode className="mr-2 h-4 w-4" />
-                      Scanner
+                    <TabsTrigger value="scanner" className="text-xs sm:text-sm">
+                      <Barcode className="mr-1 h-3 w-3 sm:mr-2 sm:h-4 sm:w-4" />
+                      <span className="hidden sm:inline">Scanner</span>
                     </TabsTrigger>
-                    <TabsTrigger value="search">
-                      <Search className="mr-2 h-4 w-4" />
-                      Código FLE
+                    <TabsTrigger value="search" className="text-xs sm:text-sm">
+                      <Search className="mr-1 h-3 w-3 sm:mr-2 sm:h-4 sm:w-4" />
+                      <span className="hidden sm:inline">Código FLE</span>
                     </TabsTrigger>
-                    <TabsTrigger value="list">
-                      <List className="mr-2 h-4 w-4" />
-                      Lista
+                    <TabsTrigger value="list" className="text-xs sm:text-sm">
+                      <List className="mr-1 h-3 w-3 sm:mr-2 sm:h-4 sm:w-4" />
+                      <span className="hidden sm:inline">Lista</span>
                     </TabsTrigger>
                   </TabsList>
 
@@ -253,8 +248,13 @@ export function TransactionForm({ onSuccess }: { onSuccess?: () => void }) {
                         placeholder="Digite o código FLE"
                         value={searchFleCode}
                         onChange={(e) => setSearchFleCode(e.target.value)}
+                        className="text-sm"
                       />
-                      <Button type="button" onClick={handleSearchByFle}>
+                      <Button
+                        type="button"
+                        onClick={handleSearchByFle}
+                        size="sm"
+                      >
                         Buscar
                       </Button>
                     </div>
@@ -273,20 +273,23 @@ export function TransactionForm({ onSuccess }: { onSuccess?: () => void }) {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <ScrollArea className="h-[300px]">
+                        {/* ✅ CORRIGIDO: ScrollArea com configurações adequadas */}
+                        <div className="h-[200px] sm:h-[300px] overflow-auto">
                           {books
                             ?.sort((a, b) => a.title.localeCompare(b.title))
                             .map((book) => (
                               <SelectItem key={book.id} value={book.id}>
-                                {book.title} - {book.codFle} -{" "}
-                                {new Intl.NumberFormat("pt-BR", {
-                                  style: "currency",
-                                  currency: "BRL",
-                                }).format(Number(book.coverPrice))}
-                                {book.quantity <= 0 ? " (Sem estoque)" : ""}
+                                <div className="text-xs sm:text-sm">
+                                  {book.title} - {book.codFle} -{" "}
+                                  {new Intl.NumberFormat("pt-BR", {
+                                    style: "currency",
+                                    currency: "BRL",
+                                  }).format(Number(book.coverPrice))}
+                                  {book.quantity <= 0 ? " (Sem estoque)" : ""}
+                                </div>
                               </SelectItem>
                             ))}
-                        </ScrollArea>
+                        </div>
                       </SelectContent>
                     </Select>
                   </TabsContent>
@@ -299,9 +302,10 @@ export function TransactionForm({ onSuccess }: { onSuccess?: () => void }) {
                   </TabsContent>
                 </Tabs>
 
-                <div className="mt-6">
-                  <ScrollArea className="h-[300px]">
-                    <div className="space-y-4 pr-4">
+                {/* ✅ CORRIGIDO: ScrollArea para carrinho com overflow nativo */}
+                <div className="mt-4">
+                  <div className="h-[200px] sm:h-[300px] overflow-auto border rounded-md p-2">
+                    <div className="space-y-2">
                       {cartItems.map((item) => (
                         <CartItem
                           key={item.bookId}
@@ -311,25 +315,25 @@ export function TransactionForm({ onSuccess }: { onSuccess?: () => void }) {
                         />
                       ))}
                     </div>
-                  </ScrollArea>
+                  </div>
                 </div>
               </Card>
             </div>
           </div>
 
-          {/* Coluna Direita */}
-          <div>
+          <div className="space-y-4">
             {cartItems.length > 0 && (
-              <Card className="p-6">
+              <Card className="p-4 sm:p-6">
                 <PaymentManager
                   totalAmount={totalAmount}
                   onPaymentsChange={setPayments}
                   disabled={loading || !isCashRegisterOpen}
                 />
 
-                {/* Adicionando o novo componente de Resumo de Venda aqui */}
-                <div className="mt-6 pt-4 border-t">
-                  <h3 className="text-lg font-medium mb-3">Resumo da Venda</h3>
+                <div className="mt-4 pt-4 border-t">
+                  <h3 className="text-base sm:text-lg font-medium mb-3">
+                    Resumo da Venda
+                  </h3>
 
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
@@ -374,7 +378,7 @@ export function TransactionForm({ onSuccess }: { onSuccess?: () => void }) {
 
                     <div className="flex justify-between text-sm font-medium">
                       <span>Valor Feira:</span>
-                      <span className=" text-blue-600">
+                      <span className="text-blue-600">
                         {formatPrice(totalAmount)}
                       </span>
                     </div>
@@ -383,7 +387,7 @@ export function TransactionForm({ onSuccess }: { onSuccess?: () => void }) {
 
                 <Button
                   type="submit"
-                  className="w-full mt-6"
+                  className="w-full mt-4"
                   disabled={
                     loading ||
                     cartItems.length === 0 ||

@@ -39,38 +39,43 @@ export async function POST(req: Request) {
         throw new Error("Livro para troca sem estoque");
       }
 
-      // Atualizar estoque do livro devolvido
+      // ✅ CORRIGIDO: Atualizar estoque do livro devolvido (+1)
       await tx.book.update({
         where: { id: body.returnedBookId },
         data: { quantity: { increment: 1 } },
       });
 
-      // Atualizar estoque do novo livro
+      // ✅ CORRIGIDO: Atualizar estoque do novo livro (-1)
       await tx.book.update({
         where: { id: body.newBookId },
         data: { quantity: { decrement: 1 } },
       });
 
-      const priceDifference = Number(body.priceDifference) || 0;
+      // ✅ CORRIGIDO: Calcular diferença corretamente
+      const priceDifference =
+        Number(newBook.coverPrice) - Number(returnedBook.coverPrice);
 
-      // Registrar transação
+      // ✅ CORRIGIDO: Registrar transação de troca
       const transaction = await tx.transaction.create({
         data: {
           type: "EXCHANGE",
-          bookId: body.newBookId,
-          returnedBookId: body.returnedBookId,
+          bookId: body.newBookId, // ✅ Livro principal é o NOVO
+          returnedBookId: body.returnedBookId, // ✅ Livro devolvido
           quantity: 1,
-          totalAmount: String(Math.abs(priceDifference)), // Sempre o valor absoluto
-          priceDifference: String(priceDifference), // Mantém o sinal para referência
+          totalAmount: String(priceDifference), // ✅ DIFERENÇA (pode ser positiva ou negativa)
+          priceDifference: String(priceDifference),
           transactionDate,
           cashRegisterId: activeCashRegister.id,
-          operatorName: body.operatorName || "SISTEMA",
-          // Criar o pagamento junto com a transação
+          operatorName: body.operatorName || "SISTEMA", // ✅ USAR OPERADOR ENVIADO
+          // ✅ CORRIGIDO: Pagamento de troca
           payments: {
             create: [
               {
-                method: body.paymentMethod || "EXCHANGE",
-                amount: String(Math.abs(priceDifference)),
+                method: "EXCHANGE", // ✅ Identificar como TROCA
+                amount: String(Math.abs(priceDifference)), // ✅ Valor absoluto
+                // Se priceDifference for negativo, é o cliente que recebe
+                change:
+                  priceDifference < 0 ? String(Math.abs(priceDifference)) : "0",
               },
             ],
           },
@@ -81,11 +86,33 @@ export async function POST(req: Request) {
         },
       });
 
-      return transaction;
+      return {
+        transaction,
+        returnedBook,
+        newBook,
+        priceDifference,
+      };
     });
 
-    return NextResponse.json(result);
+    const { transaction, returnedBook, newBook, priceDifference } = result;
+
+    let message = `Troca processada: "${returnedBook.title}" por "${newBook.title}"`;
+
+    if (priceDifference > 0) {
+      message += ` (cliente paga R$ ${priceDifference.toFixed(2)})`;
+    } else if (priceDifference < 0) {
+      message += ` (cliente recebe R$ ${Math.abs(priceDifference).toFixed(2)})`;
+    } else {
+      message += ` (sem diferença de valor)`;
+    }
+
+    return NextResponse.json({
+      success: true,
+      message,
+      data: transaction,
+    });
   } catch (error) {
+    console.error("Erro ao processar troca:", error);
     return NextResponse.json(
       {
         error: "Erro ao processar troca",

@@ -1,3 +1,4 @@
+//app/(portal)/transactions/_components/add-transaction-button.tsx
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -52,11 +53,13 @@ export function AddTransactionButton({
           Nova Venda
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-[1000px] w-[90vw]">
-        <DialogHeader>
+      <DialogContent className="w-[95vw] max-w-[1200px] h-[95vh] max-h-[900px] overflow-hidden p-0">
+        <DialogHeader className="p-4 sm:p-6 pb-2">
           <DialogTitle>Registrar Nova Venda</DialogTitle>
         </DialogHeader>
-        <TransactionForm onSuccess={() => setOpen(false)} />
+        <div className="px-4 sm:px-6 pb-4 sm:pb-6 overflow-y-auto flex-1">
+          <TransactionForm onSuccess={() => setOpen(false)} />
+        </div>
       </DialogContent>
     </Dialog>
   );

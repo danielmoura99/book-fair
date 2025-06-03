@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // app/(portal)/cash/page.tsx
 
 export const dynamic = "force-dynamic";
@@ -17,9 +18,9 @@ async function getActiveRegister() {
       transactions: {
         include: {
           book: true,
-          payments: true, // Incluindo os pagamentos
+          payments: true,
         },
-        orderBy: { createdAt: "desc" },
+        orderBy: { sequentialId: "desc" },
       },
       withdrawals: {
         orderBy: { createdAt: "desc" },
@@ -28,8 +29,58 @@ async function getActiveRegister() {
   });
 }
 
+// ✅ CORRIGIDO: Função para buscar dados dos livros devolvidos separadamente
+async function enrichTransactionsWithReturnedBooks(register: any) {
+  if (!register) return register;
+
+  // Buscar IDs únicos de livros devolvidos
+  const returnedBookIds = register.transactions
+    .filter((t: any) => t.returnedBookId)
+    .map((t: any) => t.returnedBookId)
+    .filter(
+      (id: string, index: number, self: string[]) => self.indexOf(id) === index
+    );
+
+  // Buscar dados dos livros devolvidos
+  const returnedBooks = await prisma.book.findMany({
+    where: {
+      id: { in: returnedBookIds },
+    },
+    select: {
+      id: true,
+      title: true,
+      codFle: true,
+    },
+  });
+
+  // Criar mapa para lookup rápido
+  const returnedBooksMap = returnedBooks.reduce((acc, book) => {
+    acc[book.id] = book;
+    return acc;
+  }, {} as Record<string, any>);
+
+  // Enriquecer transações com dados do livro devolvido
+  const enrichedTransactions = register.transactions.map(
+    (transaction: any) => ({
+      ...transaction,
+      returnedBook: transaction.returnedBookId
+        ? returnedBooksMap[transaction.returnedBookId] || null
+        : null,
+    })
+  );
+
+  return {
+    ...register,
+    transactions: enrichedTransactions,
+  };
+}
+
 export default async function CashPage() {
-  const activeRegister = await getActiveRegister();
+  const activeRegisterRaw = await getActiveRegister();
+  const activeRegister = await enrichTransactionsWithReturnedBooks(
+    activeRegisterRaw
+  );
+
   const balance = activeRegister
     ? await calculateRegisterBalance(activeRegister.id)
     : 0;

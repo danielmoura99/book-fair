@@ -1,3 +1,5 @@
+// app/(portal)/dashboard/page.tsx - Funções atualizadas
+
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
@@ -20,15 +22,13 @@ async function getTotalQuantity() {
   return total._sum.quantity || 0;
 }
 
+// ATUALIZADO: Incluir saleGroupId nas consultas
 async function getRecentTransactions(): Promise<SerializedTransaction[]> {
   const transactions = await prisma.transaction.findMany({
     take: 5,
     orderBy: [
       {
-        transactionDate: "desc",
-      },
-      {
-        id: "desc", // garante ordem consistente para registros da mesma data
+        sequentialId: "desc",
       },
     ],
     include: {
@@ -39,6 +39,8 @@ async function getRecentTransactions(): Promise<SerializedTransaction[]> {
 
   return transactions.map((transaction) => ({
     ...transaction,
+    sequentialId: transaction.sequentialId,
+    saleGroupId: transaction.saleGroupId, // ✅ INCLUÍDO: campo saleGroupId
     totalAmount: Number(transaction.totalAmount),
     priceDifference: transaction.priceDifference
       ? Number(transaction.priceDifference)
@@ -52,10 +54,11 @@ async function getRecentTransactions(): Promise<SerializedTransaction[]> {
   }));
 }
 
+// ATUALIZADO: Incluir saleGroupId nas consultas
 async function getAllTransactions(): Promise<SerializedTransaction[]> {
   const transactions = await prisma.transaction.findMany({
     orderBy: {
-      transactionDate: "desc",
+      sequentialId: "desc",
     },
     include: {
       book: true,
@@ -65,6 +68,8 @@ async function getAllTransactions(): Promise<SerializedTransaction[]> {
 
   return transactions.map((transaction) => ({
     ...transaction,
+    sequentialId: transaction.sequentialId,
+    saleGroupId: transaction.saleGroupId, // ✅ INCLUÍDO: campo saleGroupId
     totalAmount: Number(transaction.totalAmount),
     priceDifference: transaction.priceDifference
       ? Number(transaction.priceDifference)
@@ -133,8 +138,6 @@ export default async function DashboardPage() {
 
             <div className="col-span-3">
               <Card className="h-[497px] p-4">
-                {" "}
-                {/* Altura ajustada para match com lado esquerdo */}
                 <h3 className="font-semibold mb-4">Últimas Transações</h3>
                 <RecentTransactions transactions={recentTransactions} />
               </Card>

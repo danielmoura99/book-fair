@@ -59,6 +59,15 @@ export function BookDataTable({ data }: BookDataTableProps) {
                 <TableHead className="font-semibold text-black">
                   Título
                 </TableHead>
+                <TableHead className="font-semibold text-black text-right">
+                  Quant.
+                </TableHead>
+                <TableHead className="font-semibold text-black text-right">
+                  Preço Feira
+                </TableHead>
+                <TableHead className="font-semibold text-black text-right">
+                  Preço Capa
+                </TableHead>
                 <TableHead className="font-semibold text-black">
                   Autor
                 </TableHead>
@@ -74,15 +83,7 @@ export function BookDataTable({ data }: BookDataTableProps) {
                 <TableHead className="font-semibold text-black">
                   Assunto
                 </TableHead>
-                <TableHead className="font-semibold text-black text-right">
-                  Quant.
-                </TableHead>
-                <TableHead className="font-semibold text-black text-right">
-                  Preço Feira
-                </TableHead>
-                <TableHead className="font-semibold text-black text-right">
-                  Preço Capa
-                </TableHead>
+
                 <TableHead className="font-semibold text-black text-right">
                   Ações
                 </TableHead>
@@ -95,11 +96,6 @@ export function BookDataTable({ data }: BookDataTableProps) {
                   <TableCell>{book.barCode}</TableCell>
                   <TableCell>{book.location}</TableCell>
                   <TableCell>{book.title}</TableCell>
-                  <TableCell>{book.author}</TableCell>
-                  <TableCell>{book.medium}</TableCell>
-                  <TableCell>{book.publisher}</TableCell>
-                  <TableCell>{book.distributor}</TableCell>
-                  <TableCell>{book.subject}</TableCell>
                   <TableCell className="text-right">{book.quantity}</TableCell>
                   <TableCell className="text-right">
                     {new Intl.NumberFormat("pt-BR", {
@@ -113,6 +109,12 @@ export function BookDataTable({ data }: BookDataTableProps) {
                       currency: "BRL",
                     }).format(Number(book.price))}
                   </TableCell>
+                  <TableCell>{book.author}</TableCell>
+                  <TableCell>{book.medium}</TableCell>
+                  <TableCell>{book.publisher}</TableCell>
+                  <TableCell>{book.distributor}</TableCell>
+                  <TableCell>{book.subject}</TableCell>
+
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
                       <EditBookButton book={book} />

@@ -32,18 +32,25 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
             className="flex items-center justify-between p-3 rounded-lg border"
           >
             <div className="space-y-1">
-              <p className="font-medium">{transaction.book.title}</p>
-              <p className="text-sm text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-xs bg-muted px-2 py-1 rounded">
+                  #{transaction.sequentialId}{" "}
+                  {/* NOVO: Mostrar ID sequencial */}
+                </span>
+                <p className="font-medium text-sm">{transaction.book.title}</p>
+              </div>
+              <p className="text-xs text-muted-foreground">
                 {new Date(transaction.transactionDate).toLocaleDateString(
                   "pt-BR"
-                )}
+                )}{" "}
+                • {transaction.operatorName}
               </p>
             </div>
             <div className="text-right">
               <p className="font-bold">
                 {formatMoney(Number(transaction.totalAmount))}
               </p>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 {transaction.quantity}{" "}
                 {transaction.quantity === 1 ? "unidade" : "unidades"}
               </p>

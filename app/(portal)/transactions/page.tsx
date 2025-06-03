@@ -10,9 +10,9 @@ import { SerializedTransaction } from "@/types";
 
 async function getTransactions(): Promise<SerializedTransaction[]> {
   const transactions = await prisma.transaction.findMany({
-    orderBy: {
-      transactionDate: "desc",
-    },
+    orderBy: [
+      { sequentialId: "desc" }, // Ordenar por ID sequencial
+    ],
     include: {
       book: true,
       payments: true,
@@ -22,6 +22,8 @@ async function getTransactions(): Promise<SerializedTransaction[]> {
   // Serializa os dados antes de passar para o cliente
   return transactions.map((transaction) => ({
     ...transaction,
+    sequentialId: transaction.sequentialId,
+    saleGroupId: transaction.saleGroupId, // ✅ INCLUÍDO: campo saleGroupId
     totalAmount: Number(transaction.totalAmount),
     priceDifference: transaction.priceDifference
       ? Number(transaction.priceDifference)
@@ -43,7 +45,12 @@ export default async function TransactionsPage() {
       <Navbar />
       <div className="flex flex-col h-screen overflow-hidden">
         <div className="flex items-center justify-between p-6">
-          <h2 className="text-2xl font-bold tracking-tight">Transações</h2>
+          <div>
+            <h2 className="text-2xl font-bold tracking-tight">Transações</h2>
+            <p className="text-sm text-muted-foreground">
+              {transactions.length} transações encontradas
+            </p>
+          </div>
           <AddTransactionButton />
         </div>
         <ScrollArea className="flex-1 p-6 pt-0">

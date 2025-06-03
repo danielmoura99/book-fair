@@ -47,6 +47,8 @@ model Book {
 
 model Transaction {
   id              String    @id @default(cuid())
+  sequentialId    Int       @unique @default(autoincrement())
+  saleGroupId     String?
   bookId          String
   book            Book      @relation(fields: [bookId], references: [id])
   quantity        Int
@@ -62,6 +64,8 @@ model Transaction {
   operatorName    String
   payments        Payment[]    
 
+  @@index([sequentialId])
+  @@index([saleGroupId]) // NOVO ÍNDICE
 }
 
 model Operator {

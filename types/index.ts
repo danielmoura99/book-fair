@@ -35,6 +35,8 @@ export interface BookFormData {
 }
 
 export interface TransactionWithBook extends PrismaTransaction {
+  sequentialId: number;
+  saleGroupId: string | null;
   book: Book;
   type: TransactionType;
   returnedBookId: string | null;
@@ -45,6 +47,8 @@ export interface SerializedTransaction
     PrismaTransaction,
     "totalAmount" | "returnedBookId" | "priceDifference"
   > {
+  sequentialId: number;
+  saleGroupId: string | null;
   totalAmount: number;
   book: SerializedBook;
   type: TransactionType;
