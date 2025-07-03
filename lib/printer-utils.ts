@@ -369,11 +369,14 @@ export const printReceipt = async (saleData: SaleData): Promise<boolean> => {
     console.error("❌ Erro detalhado na impressão:", error);
 
     // Melhorar mensagens de erro
-    if (error.message.includes("Failed to open")) {
+    if (error instanceof Error && error.message.includes("NotFoundError")) {
       throw new Error(
         "Não foi possível conectar com a impressora. Verifique se ela está ligada e funcionando."
       );
-    } else if (error.message.includes("No device selected")) {
+    } else if (
+      error instanceof Error &&
+      error.message.includes("No device selected")
+    ) {
       throw new Error("Impressora não foi selecionada corretamente.");
     } else {
       throw error;
