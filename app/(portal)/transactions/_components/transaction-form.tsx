@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 //app/(portal)/transactions/_components/transaction-form.tsx
 "use client";
@@ -32,6 +33,10 @@ import { PaymentManager } from "./payment-manager";
 import { BarcodeScanner } from "./barcode-scannet";
 import { formatPrice } from "@/lib/utils";
 
+import { PrintReceiptDialog } from "@/components/print-receipt-dialog";
+import { usePrinter } from "@/hooks/use-printer";
+import { SaleData } from "@/lib/printer-utils";
+
 const formSchema = z.object({
   operatorName: z.string().min(1, "Selecione o operador"),
 });
@@ -65,7 +70,16 @@ export function TransactionForm({ onSuccess }: { onSuccess?: () => void }) {
   );
   const [payments, setPayments] = useState<PaymentSplit[]>([]);
 
+  // NOVOS ESTADOS PARA IMPRESSÃO
+  const [showPrintDialog, setShowPrintDialog] = useState(false);
+  const [saleDataForPrint, setSaleDataForPrint] = useState<SaleData | null>(
+    null
+  );
+
   const { isOpen: isCashRegisterOpen } = useCashRegister();
+
+  // NOVO HOOK DE IMPRESSÃO
+  const { shouldShowPrintDialog, prepareSaleData } = usePrinter();
 
   const { data: books } = useQuery<Book[]>({
     queryKey: ["books"],
@@ -173,7 +187,10 @@ export function TransactionForm({ onSuccess }: { onSuccess?: () => void }) {
       setLoading(true);
       setError(null);
 
-      await axios.post("/api/transactions/bulk", {
+      console.log("🛒 Processando venda...");
+
+      // EXECUTAR A VENDA (código original mantido)
+      const response = await axios.post("/api/transactions/bulk", {
         items: cartItems.map((item) => ({
           bookId: item.bookId,
           quantity: item.quantity,
@@ -185,10 +202,44 @@ export function TransactionForm({ onSuccess }: { onSuccess?: () => void }) {
         date: new Date().toISOString(),
       });
 
-      router.refresh();
-      onSuccess?.();
+      console.log("✅ Venda processada com sucesso:", response.data);
+
+      // NOVA FUNCIONALIDADE: Verificar se deve mostrar dialog de impressão
+      console.log("🖨️ Verificando disponibilidade de impressora...");
+
+      const showPrint = await shouldShowPrintDialog();
+
+      console.log("🖨️ Resultado da verificação:", showPrint);
+
+      if (showPrint) {
+        console.log(
+          "✅ Impressora detectada! Preparando dados para impressão..."
+        );
+
+        // Preparar dados para impressão
+        const saleData = prepareSaleData(
+          cartItems,
+          totalAmount,
+          selectedOperator,
+          payments,
+          response.data?.sequentialId
+        );
+
+        console.log("📄 Dados da venda preparados:", saleData);
+
+        setSaleDataForPrint(saleData);
+        setShowPrintDialog(true);
+
+        console.log("🔔 Dialog de impressão deve aparecer agora!");
+      } else {
+        console.log(
+          "❌ Nenhuma impressora detectada. Continuando sem impressão..."
+        );
+        // Não há impressora, continuar normalmente
+        handleSaleComplete();
+      }
     } catch (error) {
-      console.error(error);
+      console.error("❌ Erro na venda:", error);
       if (error instanceof Error) {
         setError(error.message);
       } else {
@@ -199,214 +250,241 @@ export function TransactionForm({ onSuccess }: { onSuccess?: () => void }) {
     }
   };
 
+  // NOVA FUNÇÃO PARA COMPLETAR A VENDA
+  const handleSaleComplete = () => {
+    router.refresh();
+    onSuccess?.();
+
+    // Limpar formulário (código original mantido)
+    setCartItems([]);
+    setPayments([]);
+    setError(null);
+  };
+
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        {error && (
-          <Alert variant="destructive">
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
+    <>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          {error && (
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
 
-        <div className="flex flex-col lg:grid lg:grid-cols-2 gap-4">
-          <div className="space-y-4">
-            <OperatorSelector
-              selectedOperator={selectedOperator}
-              onOperatorSelect={(name) => {
-                setSelectedOperator(name);
-                if (name) {
-                  localStorage.setItem("lastOperator", name);
+          <div className="flex flex-col lg:grid lg:grid-cols-2 gap-4">
+            <div className="space-y-4">
+              <OperatorSelector
+                selectedOperator={selectedOperator}
+                onOperatorSelect={(name) => {
+                  setSelectedOperator(name);
+                  if (name) {
+                    localStorage.setItem("lastOperator", name);
+                  }
+                }}
+              />
+
+              <div
+                className={
+                  !selectedOperator ? "opacity-50 pointer-events-none" : ""
                 }
-              }}
-            />
-
-            <div
-              className={
-                !selectedOperator ? "opacity-50 pointer-events-none" : ""
-              }
-            >
-              <Card className="p-4">
-                <Tabs defaultValue="scanner">
-                  <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="scanner" className="text-xs sm:text-sm">
-                      <Barcode className="mr-1 h-3 w-3 sm:mr-2 sm:h-4 sm:w-4" />
-                      <span className="hidden sm:inline">Scanner</span>
-                    </TabsTrigger>
-                    <TabsTrigger value="search" className="text-xs sm:text-sm">
-                      <Search className="mr-1 h-3 w-3 sm:mr-2 sm:h-4 sm:w-4" />
-                      <span className="hidden sm:inline">Código FLE</span>
-                    </TabsTrigger>
-                    <TabsTrigger value="list" className="text-xs sm:text-sm">
-                      <List className="mr-1 h-3 w-3 sm:mr-2 sm:h-4 sm:w-4" />
-                      <span className="hidden sm:inline">Lista</span>
-                    </TabsTrigger>
-                  </TabsList>
-
-                  <TabsContent value="search" className="space-y-4">
-                    <div className="flex gap-2">
-                      <Input
-                        placeholder="Digite o código FLE"
-                        value={searchFleCode}
-                        onChange={(e) => setSearchFleCode(e.target.value)}
-                        className="text-sm"
-                      />
-                      <Button
-                        type="button"
-                        onClick={handleSearchByFle}
-                        size="sm"
+              >
+                <Card className="p-4">
+                  <Tabs defaultValue="scanner">
+                    <TabsList className="grid w-full grid-cols-3">
+                      <TabsTrigger
+                        value="scanner"
+                        className="text-xs sm:text-sm"
                       >
-                        Buscar
-                      </Button>
-                    </div>
-                  </TabsContent>
+                        <Barcode className="mr-1 h-3 w-3 sm:mr-2 sm:h-4 sm:w-4" />
+                        <span className="hidden sm:inline">Scanner</span>
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="search"
+                        className="text-xs sm:text-sm"
+                      >
+                        <Search className="mr-1 h-3 w-3 sm:mr-2 sm:h-4 sm:w-4" />
+                        <span className="hidden sm:inline">Código FLE</span>
+                      </TabsTrigger>
+                      <TabsTrigger value="list" className="text-xs sm:text-sm">
+                        <List className="mr-1 h-3 w-3 sm:mr-2 sm:h-4 sm:w-4" />
+                        <span className="hidden sm:inline">Lista</span>
+                      </TabsTrigger>
+                    </TabsList>
 
-                  <TabsContent value="list">
-                    <Select
-                      onValueChange={(bookId) => {
-                        const book = books?.find((b) => b.id === bookId);
-                        if (book) addToCart(book);
-                      }}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione um livro" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {/* ✅ CORRIGIDO: ScrollArea com configurações adequadas */}
-                        <div className="h-[200px] sm:h-[300px] overflow-auto">
-                          {books
-                            ?.sort((a, b) => a.title.localeCompare(b.title))
-                            .map((book) => (
-                              <SelectItem key={book.id} value={book.id}>
-                                <div className="text-xs sm:text-sm">
-                                  {book.title} - {book.codFle} -{" "}
-                                  {new Intl.NumberFormat("pt-BR", {
-                                    style: "currency",
-                                    currency: "BRL",
-                                  }).format(Number(book.coverPrice))}
-                                  {book.quantity <= 0 ? " (Sem estoque)" : ""}
-                                </div>
-                              </SelectItem>
-                            ))}
-                        </div>
-                      </SelectContent>
-                    </Select>
-                  </TabsContent>
-
-                  <TabsContent value="scanner">
-                    <BarcodeScanner
-                      onScan={(book) => addToCart(book)}
-                      disabled={!selectedOperator}
-                    />
-                  </TabsContent>
-                </Tabs>
-
-                {/* ✅ CORRIGIDO: ScrollArea para carrinho com overflow nativo */}
-                <div className="mt-4">
-                  <div className="h-[200px] sm:h-[300px] overflow-auto border rounded-md p-2">
-                    <div className="space-y-2">
-                      {cartItems.map((item) => (
-                        <CartItem
-                          key={item.bookId}
-                          item={item}
-                          onUpdateQuantity={updateQuantity}
-                          onRemove={removeFromCart}
+                    <TabsContent value="search" className="space-y-4">
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="Digite o código FLE"
+                          value={searchFleCode}
+                          onChange={(e) => setSearchFleCode(e.target.value)}
+                          className="text-sm"
                         />
-                      ))}
+                        <Button
+                          type="button"
+                          onClick={handleSearchByFle}
+                          size="sm"
+                        >
+                          Buscar
+                        </Button>
+                      </div>
+                    </TabsContent>
+
+                    <TabsContent value="list">
+                      <Select
+                        onValueChange={(bookId) => {
+                          const book = books?.find((b) => b.id === bookId);
+                          if (book) addToCart(book);
+                        }}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione um livro" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {/* ✅ CORRIGIDO: ScrollArea com configurações adequadas */}
+                          <div className="h-[200px] sm:h-[300px] overflow-auto">
+                            {books
+                              ?.sort((a, b) => a.title.localeCompare(b.title))
+                              .map((book) => (
+                                <SelectItem key={book.id} value={book.id}>
+                                  <div className="text-xs sm:text-sm">
+                                    {book.title} - {book.codFle} -{" "}
+                                    {new Intl.NumberFormat("pt-BR", {
+                                      style: "currency",
+                                      currency: "BRL",
+                                    }).format(Number(book.coverPrice))}
+                                    {book.quantity <= 0 ? " (Sem estoque)" : ""}
+                                  </div>
+                                </SelectItem>
+                              ))}
+                          </div>
+                        </SelectContent>
+                      </Select>
+                    </TabsContent>
+
+                    <TabsContent value="scanner">
+                      <BarcodeScanner
+                        onScan={(book) => addToCart(book)}
+                        disabled={!selectedOperator}
+                      />
+                    </TabsContent>
+                  </Tabs>
+
+                  {/* ✅ CORRIGIDO: ScrollArea para carrinho com overflow nativo */}
+                  <div className="mt-4">
+                    <div className="h-[200px] sm:h-[300px] overflow-auto border rounded-md p-2">
+                      <div className="space-y-2">
+                        {cartItems.map((item) => (
+                          <CartItem
+                            key={item.bookId}
+                            item={item}
+                            onUpdateQuantity={updateQuantity}
+                            onRemove={removeFromCart}
+                          />
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </div>
-              </Card>
+                </Card>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              {cartItems.length > 0 && (
+                <Card className="p-4 sm:p-6">
+                  <PaymentManager
+                    totalAmount={totalAmount}
+                    onPaymentsChange={setPayments}
+                    disabled={loading || !isCashRegisterOpen}
+                  />
+
+                  <div className="mt-4 pt-4 border-t">
+                    <h3 className="text-base sm:text-lg font-medium mb-3">
+                      Resumo da Venda
+                    </h3>
+
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span>Total de Itens:</span>
+                        <span className="font-medium">
+                          {cartItems.reduce(
+                            (sum, item) => sum + item.quantity,
+                            0
+                          )}{" "}
+                          livros
+                        </span>
+                      </div>
+
+                      <div className="flex justify-between text-sm">
+                        <span>Valor Normal:</span>
+                        <span className="font-medium text-red-500 line-through">
+                          {formatPrice(
+                            cartItems.reduce(
+                              (sum, item) =>
+                                sum + Number(item.book.price) * item.quantity,
+                              0
+                            )
+                          )}
+                        </span>
+                      </div>
+
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>Desconto:</span>
+                        <span>
+                          {formatPrice(
+                            cartItems.reduce(
+                              (sum, item) =>
+                                sum +
+                                (Number(item.book.price) -
+                                  Number(item.book.coverPrice)) *
+                                  item.quantity,
+                              0
+                            )
+                          )}
+                        </span>
+                      </div>
+
+                      <div className="flex justify-between text-sm font-medium">
+                        <span>Valor Feira:</span>
+                        <span className="text-blue-600">
+                          {formatPrice(totalAmount)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Button
+                    type="submit"
+                    className="w-full mt-4"
+                    disabled={
+                      loading ||
+                      cartItems.length === 0 ||
+                      !isCashRegisterOpen ||
+                      payments.reduce((sum, p) => sum + p.amount, 0) !==
+                        totalAmount
+                    }
+                  >
+                    {loading
+                      ? "Processando..."
+                      : !isCashRegisterOpen
+                      ? "Abra o caixa primeiro"
+                      : "Finalizar Venda"}
+                  </Button>
+                </Card>
+              )}
             </div>
           </div>
+        </form>
+      </Form>
 
-          <div className="space-y-4">
-            {cartItems.length > 0 && (
-              <Card className="p-4 sm:p-6">
-                <PaymentManager
-                  totalAmount={totalAmount}
-                  onPaymentsChange={setPayments}
-                  disabled={loading || !isCashRegisterOpen}
-                />
-
-                <div className="mt-4 pt-4 border-t">
-                  <h3 className="text-base sm:text-lg font-medium mb-3">
-                    Resumo da Venda
-                  </h3>
-
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span>Total de Itens:</span>
-                      <span className="font-medium">
-                        {cartItems.reduce(
-                          (sum, item) => sum + item.quantity,
-                          0
-                        )}{" "}
-                        livros
-                      </span>
-                    </div>
-
-                    <div className="flex justify-between text-sm">
-                      <span>Valor Normal:</span>
-                      <span className="font-medium text-red-500 line-through">
-                        {formatPrice(
-                          cartItems.reduce(
-                            (sum, item) =>
-                              sum + Number(item.book.price) * item.quantity,
-                            0
-                          )
-                        )}
-                      </span>
-                    </div>
-
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>Desconto:</span>
-                      <span>
-                        {formatPrice(
-                          cartItems.reduce(
-                            (sum, item) =>
-                              sum +
-                              (Number(item.book.price) -
-                                Number(item.book.coverPrice)) *
-                                item.quantity,
-                            0
-                          )
-                        )}
-                      </span>
-                    </div>
-
-                    <div className="flex justify-between text-sm font-medium">
-                      <span>Valor Feira:</span>
-                      <span className="text-blue-600">
-                        {formatPrice(totalAmount)}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <Button
-                  type="submit"
-                  className="w-full mt-4"
-                  disabled={
-                    loading ||
-                    cartItems.length === 0 ||
-                    !isCashRegisterOpen ||
-                    payments.reduce((sum, p) => sum + p.amount, 0) !==
-                      totalAmount
-                  }
-                >
-                  {loading
-                    ? "Processando..."
-                    : !isCashRegisterOpen
-                    ? "Abra o caixa primeiro"
-                    : "Finalizar Venda"}
-                </Button>
-              </Card>
-            )}
-          </div>
-        </div>
-      </form>
-    </Form>
+      {/* ADICIONAR APENAS ESTE NOVO DIALOG */}
+      <PrintReceiptDialog
+        open={showPrintDialog}
+        onOpenChange={setShowPrintDialog}
+        saleData={saleDataForPrint}
+        onComplete={handleSaleComplete}
+      />
+    </>
   );
 }
