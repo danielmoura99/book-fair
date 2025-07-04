@@ -67,7 +67,8 @@ export function ExchangeForm({ mode, onSuccess }: ExchangeFormProps) {
   const { data: soldBooks } = useQuery<Book[]>({
     queryKey: ["soldBooks"],
     queryFn: async () => {
-      const response = await axios.get("/api/books/sold");
+      const timestamp = Date.now();
+      const response = await axios.get(`/api/books/sold?t=${timestamp}`);
       return response.data;
     },
   });

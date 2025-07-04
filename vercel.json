@@ -8,6 +8,9 @@
     },
     "app/api/returns/*/route.ts": {
       "maxDuration": 30
+    },
+    "app/api/books/*/route.ts": {
+      "maxDuration": 30
     }
   },
   "headers": [
@@ -55,6 +58,27 @@
     },
     {
       "source": "/api/returns/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store, no-cache, must-revalidate, proxy-revalidate"
+        },
+        {
+          "key": "Pragma",
+          "value": "no-cache"
+        },
+        {
+          "key": "Expires",
+          "value": "0"
+        },
+        {
+          "key": "Surrogate-Control",
+          "value": "no-store"
+        }
+      ]
+    },
+    {
+      "source": "/api/books/(.*)",
       "headers": [
         {
           "key": "Cache-Control",
