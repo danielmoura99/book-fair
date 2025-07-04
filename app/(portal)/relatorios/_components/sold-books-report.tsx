@@ -1,7 +1,6 @@
 //app/(portal)/relatorios/_components/sold-books-report.tsx
 "use client";
 
-import React, { useEffect, useState } from "react";
 import axios from "axios";
 import {
   Table,
@@ -15,6 +14,9 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { formatPrice } from "@/lib/utils";
 import dynamic from "next/dynamic";
 import { ExcelDownloadButton } from "./excel-download-button";
+import { Button } from "@/components/ui/button";
+import { RefreshCw } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 // Import dinâmico do componente PDF
 const PDFDownloadButton = dynamic(
@@ -34,29 +36,33 @@ interface SoldBookData {
 }
 
 function SoldBooksReport() {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [soldBooks, setSoldBooks] = useState<SoldBookData[]>([]);
+  const queryClient = useQueryClient(); // ✅ ADICIONAR
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const response = await axios.get("/api/reports/sold-books");
-        const sortedData = response.data.sort(
-          (a: SoldBookData, b: SoldBookData) =>
-            b.totalQuantity - a.totalQuantity
-        );
-        setSoldBooks(sortedData);
-        setError(null);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Erro ao carregar dados");
-      } finally {
-        setLoading(false);
-      }
-    }
+  const {
+    data: soldBooks = [],
+    isLoading: loading,
+    error,
+    refetch,
+  } = useQuery<SoldBookData[]>({
+    queryKey: ["sold-books"],
+    queryFn: async () => {
+      const response = await axios.get("/api/reports/sold-books");
+      return response.data.sort(
+        (a: SoldBookData, b: SoldBookData) => b.totalQuantity - a.totalQuantity
+      );
+    },
+    // ✅ CONFIGURAÇÕES ANTI-CACHE:
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+  });
 
-    fetchData();
-  }, []);
+  // ✅ ADICIONAR função de refresh:
+  const handleRefresh = async () => {
+    await queryClient.invalidateQueries({ queryKey: ["sold-books"] });
+    refetch();
+  };
 
   if (loading) {
     return <div className="p-4">Carregando relatório...</div>;
@@ -64,7 +70,10 @@ function SoldBooksReport() {
 
   if (error) {
     return (
-      <div className="p-4 text-red-600">Erro ao carregar dados: {error}</div>
+      <div className="p-4 text-red-600">
+        Erro ao carregar dados:{" "}
+        {error instanceof Error ? error.message : "Erro desconhecido"}
+      </div>
     );
   }
 
@@ -92,7 +101,21 @@ function SoldBooksReport() {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-lg font-semibold">Livros Vendidos</h3>
+        <Button
+          onClick={handleRefresh}
+          variant="outline"
+          size="sm"
+          disabled={loading}
+        >
+          <RefreshCw
+            className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`}
+          />
+          Atualizar
+        </Button>
+      </div>
+      <div className="flex justify-between">
         <div>
           <h3 className="text-lg font-semibold">
             Relatório de Livros Vendidos

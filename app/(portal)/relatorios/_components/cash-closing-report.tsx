@@ -1,7 +1,6 @@
 //app/(portal)/relatorios/_components/cash-closing-report.tsx
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import {
   Table,
@@ -18,6 +17,9 @@ import { CashClosingPDF } from "./cash-closing-pdf";
 import { PDFDownloadButton } from "./pdf-download-button";
 import { formatPaymentMethod } from "@/lib/payment-utils";
 import { CashClosingExcelExporter } from "./cash-closing-excel-exporter";
+import { Button } from "@/components/ui/button";
+import { RefreshCw } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 interface PaymentSummary {
   method: string;
@@ -72,13 +74,28 @@ interface CashClosingData {
 }
 
 export function CashClosingReport() {
-  const { data: closings, isLoading } = useQuery<CashClosingData[]>({
+  const queryClient = useQueryClient();
+
+  const {
+    data: closings,
+    isLoading,
+    refetch,
+  } = useQuery<CashClosingData[]>({
     queryKey: ["cash-closing-report"],
     queryFn: async () => {
       const response = await axios.get("/api/reports/cash-closing");
       return response.data;
     },
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
+
+  const handleRefresh = async () => {
+    await queryClient.invalidateQueries({ queryKey: ["cash-closing-report"] });
+    refetch();
+  };
 
   if (isLoading) {
     return <div>Carregando...</div>;
@@ -90,9 +107,22 @@ export function CashClosingReport() {
 
   return (
     <div className="space-y-6">
-      <h3 className="text-lg font-semibold">
-        Relatório de Fechamento de Caixa
-      </h3>
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-semibold">
+          Relatório de Fechamento de Caixa
+        </h3>
+        <Button
+          onClick={handleRefresh}
+          variant="outline"
+          size="sm"
+          disabled={isLoading}
+        >
+          <RefreshCw
+            className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`}
+          />
+          Atualizar
+        </Button>
+      </div>
 
       <ScrollArea className="h-[600px]">
         {closings?.map((closing) => {

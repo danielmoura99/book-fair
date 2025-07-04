@@ -1,7 +1,7 @@
 // app/(portal)/relatorios/_components/inventory-report.tsx
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import axios from "axios";
 import {
   Table,
@@ -14,6 +14,9 @@ import {
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { InventoryPDFDownloadButton } from "./inventory-pdf-button";
 import { ExcelDownloadButton } from "./excel-download-button";
+import { Button } from "@/components/ui/button";
+import { RefreshCw } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 interface InventoryBookData {
   codFle: string;
@@ -25,25 +28,31 @@ interface InventoryBookData {
 }
 
 function InventoryReport() {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [booksInventory, setBooksInventory] = useState<InventoryBookData[]>([]);
+  const queryClient = useQueryClient(); // ✅ ADICIONAR
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const response = await axios.get("/api/reports/books-inventory");
-        setBooksInventory(response.data);
-        setError(null);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Erro ao carregar dados");
-      } finally {
-        setLoading(false);
-      }
-    }
+  const {
+    data: booksInventory = [],
+    isLoading: loading,
+    error,
+    refetch,
+  } = useQuery<InventoryBookData[]>({
+    queryKey: ["books-inventory"],
+    queryFn: async () => {
+      const response = await axios.get("/api/reports/books-inventory");
+      return response.data;
+    },
+    // ✅ CONFIGURAÇÕES ANTI-CACHE:
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+  });
 
-    fetchData();
-  }, []);
+  // ✅ ADICIONAR função de refresh:
+  const handleRefresh = async () => {
+    await queryClient.invalidateQueries({ queryKey: ["books-inventory"] });
+    refetch();
+  };
 
   if (loading) {
     return <div className="p-4">Carregando relatório...</div>;
@@ -51,7 +60,9 @@ function InventoryReport() {
 
   if (error) {
     return (
-      <div className="p-4 text-red-600">Erro ao carregar dados: {error}</div>
+      <div className="p-4 text-red-600">
+        Erro ao carregar dados: {error.message}
+      </div>
     );
   }
 
@@ -85,6 +96,17 @@ function InventoryReport() {
           <h3 className="text-lg font-semibold">
             Relatório de Livros em Estoque
           </h3>
+          <Button
+            onClick={handleRefresh}
+            variant="outline"
+            size="sm"
+            disabled={loading}
+          >
+            <RefreshCw
+              className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`}
+            />
+            Atualizar
+          </Button>
           <p className="text-sm text-muted-foreground">
             Total em estoque: {totalInventory} livros | Total vendido:{" "}
             {totalSold} livros
