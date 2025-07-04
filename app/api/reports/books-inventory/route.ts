@@ -2,8 +2,20 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function GET() {
   try {
+    const headers = new Headers();
+    headers.set(
+      "Cache-Control",
+      "no-store, no-cache, must-revalidate, proxy-revalidate"
+    );
+    headers.set("Pragma", "no-cache");
+    headers.set("Expires", "0");
+    headers.set("Surrogate-Control", "no-store");
+
     // ✅ OTIMIZAÇÃO: Uma única query com JOIN em vez de loop
     const booksWithSales = await prisma.book.findMany({
       where: {
@@ -59,7 +71,10 @@ export async function GET() {
 
     console.log(`📊 Relatório gerado: ${result.length} livros processados`);
 
-    return NextResponse.json(result);
+    return new NextResponse(JSON.stringify(result), {
+      status: 200,
+      headers,
+    });
   } catch (error) {
     console.error("❌ Erro ao buscar relatório de estoque:", error);
 

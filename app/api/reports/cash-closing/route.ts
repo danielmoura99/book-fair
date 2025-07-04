@@ -2,8 +2,20 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function GET() {
   try {
+    const headers = new Headers();
+    headers.set(
+      "Cache-Control",
+      "no-store, no-cache, must-revalidate, proxy-revalidate"
+    );
+    headers.set("Pragma", "no-cache");
+    headers.set("Expires", "0");
+    headers.set("Surrogate-Control", "no-store");
+
     const closedRegisters = await prisma.cashRegister.findMany({
       where: {
         status: "CLOSED",
@@ -100,7 +112,10 @@ export async function GET() {
       };
     });
 
-    return NextResponse.json(closingsWithSummary);
+    return new NextResponse(JSON.stringify(closingsWithSummary), {
+      status: 200,
+      headers,
+    });
   } catch (error) {
     console.error("Erro ao buscar relatório de fechamento:", error);
     return NextResponse.json(
