@@ -25,6 +25,9 @@ interface BookData {
   coverPrice: number;
   price: number;
   title: string;
+  author: string;
+  medium: string;
+  location: string;
   publisher: string;
   distributor: string;
   subject: string;
@@ -81,7 +84,12 @@ export function UploadBooks() {
   const normalizePrice = (price: string | number): number => {
     if (!price) return 0;
 
-    let priceStr = String(price);
+    let priceStr = String(price).trim();
+
+    // Tratar casos especiais
+    if (priceStr === "-" || priceStr === "N/A" || priceStr === "") {
+      return 0; // Para books, permitir preço 0
+    }
 
     // Remove R$, espaços e converte vírgula para ponto
     priceStr = priceStr.replace(/[R$\s]/g, "").replace(",", ".");
@@ -119,27 +127,32 @@ export function UploadBooks() {
       // Mapear colunas do Excel para nosso formato
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const books: BookData[] = rows.map((row: any) => ({
-        codFle: String(row[0] || "").trim(),
-        barCode: String(row[1] || "").trim() || undefined,
-        quantity: Number(row[2]) || 0,
-        coverPrice: normalizePrice(row[3]),
-        price: normalizePrice(row[3]),
-        title: String(row[4] || "").trim(),
-        publisher: String(row[5] || "").trim(),
-        distributor: String(row[6] || "").trim(),
-        subject: String(row[7] || "").trim(),
+        codFle: String(row[0] || "").trim(), // [0] Código FLE ✅
+        barCode: String(row[1] || "").trim() || undefined, // [1] Código de Barras ✅
+        location: String(row[2] || "").trim() || "ESTOQUE", // [2] Local ✅
+        quantity: Number(row[3]) || 0, // [3] Quantidade ✅
+        coverPrice: normalizePrice(row[4]), // [4] Preço Feira ✅
+        price: normalizePrice(row[5]), // [5] Preço Capa ✅
+        title: String(row[6] || "").trim(), // [6] Título ✅
+        author: String(row[7] || "").trim() || "Não informado", // [7] Autor ✅
+        medium: String(row[8] || "").trim() || "Não informado", // [8] Médium ✅
+        publisher: String(row[9] || "").trim(), // [9] Editora ✅
+        distributor: String(row[10] || "").trim(), // [10] Distribuidor ✅
+        subject: String(row[11] || "").trim(), // [11] Assunto ✅
       }));
 
       setProgress(50);
 
       // Validar dados obrigatórios
       const invalidBooks = books.filter((book) => {
-        return (
-          !book.title ||
-          !book.codFle ||
-          book.quantity <= 0 ||
-          book.coverPrice <= 0
-        );
+        const issues = [];
+
+        if (!book.codFle) issues.push("código FLE ausente");
+        if (!book.title) issues.push("título ausente");
+        // Não rejeitar por quantidade = 0 (pode ser estoque zerado)
+        // Não rejeitar por preço = 0 (pode ser doação ou promocional)
+
+        return issues.length > 0;
       });
 
       if (invalidBooks.length > 0) {

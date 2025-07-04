@@ -49,7 +49,7 @@ export async function GET(req: Request) {
       orderBy: {
         title: "asc",
       },
-      take: 1000, // Limitar resultados para melhor performance
+      take: 8000, // Limitar resultados para melhor performance
     });
 
     // Calcular estatísticas sobre o inventário

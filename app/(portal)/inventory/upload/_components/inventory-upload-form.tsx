@@ -125,14 +125,14 @@ export function InventoryUploadForm() {
         barCode: String(row[1] || "").trim() || undefined, // cod barras
         location: String(row[2] || "").trim() || "ESTOQUE", // Local
         quantity: Number(row[3]) || 0, // quantidade
-        coverPrice: normalizePrice(row[4]), // Preco Feira
-        price: normalizePrice(row[5]), // Preco capa
+        coverPrice: normalizePrice(row[5]), // Preco Feira
+        price: normalizePrice(row[4]), // Preco capa
         title: String(row[6] || "").trim(), // Título
         author: String(row[7] || "").trim(), // Autor
         medium: String(row[8] || "").trim(), // Médium
         publisher: String(row[9] || "").trim(), // Editora 2024
-        distributor: String(row[10] || "").trim(), // Distribuidor
-        subject: String(row[11] || "").trim(), // Assunto
+        distributor: String(row[11] || "").trim(), // Distribuidor
+        subject: String(row[10] || "").trim(), // Assunto
       }));
 
       setProgress(50);
@@ -233,13 +233,17 @@ export function InventoryUploadForm() {
         }));
 
         try {
-          const response = await axios.post("/api/inventory/batch/upload", {
-            items: batch,
+          const response = await axios.post("/api/import", {
+            books: batch,
           });
+
+          const createdCount = response.data.results.created?.length || 0;
+          const updatedCount = response.data.results.updated?.length || 0;
+          const successCount = createdCount + updatedCount;
 
           setProcessingStatus((prev) => ({
             ...prev,
-            validRows: prev.validRows + response.data.results.success.length,
+            validRows: prev.validRows + successCount,
             processedRows: prev.processedRows + batch.length,
             batchProcessed: response.data.results.success.length,
             logs: [
@@ -340,7 +344,7 @@ export function InventoryUploadForm() {
           variant="outline"
         >
           <Upload className="mr-2 h-4 w-4" />
-          Importar Inventário
+          Importar
         </Button>
         <input
           id="inventory-upload"

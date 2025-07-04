@@ -12,14 +12,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Search,
-  RefreshCw,
-  PlusCircle,
-  FileDown,
-  Trash,
-  Pencil,
-} from "lucide-react";
+import { Search, RefreshCw, PlusCircle, Trash, Pencil } from "lucide-react";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
@@ -28,6 +21,8 @@ import { formatPrice } from "@/lib/utils";
 import { AddInventoryBookDialog } from "./add-inventory-book-dialog";
 import { EditInventoryBookDialog } from "./edit-inventory-book-dialog";
 import { DeleteInventoryBookDialog } from "./delete-inventory-book-dialog";
+import { ExportInventoryButton } from "./export-inventory-button";
+import { InventoryUploadForm } from "../upload/_components/inventory-upload-form";
 
 interface InventoryBook {
   id: string;
@@ -106,14 +101,6 @@ export function InventoryCurrentTable() {
     setFilteredBooks(filtered);
   }, [searchTerm, books]);
 
-  const handleExport = () => {
-    // Lógica para exportar (manter a que já existia)
-    toast({
-      title: "Exportando inventário",
-      description: "Funcionalidade de exportação em desenvolvimento",
-    });
-  };
-
   const handleResetDatabase = () => {
     // Lógica para zerar base (manter a que já existia)
     toast({
@@ -167,10 +154,10 @@ export function InventoryCurrentTable() {
           </Button>
 
           {/* Botão de Exportar (original) */}
-          <Button variant="outline" onClick={handleExport}>
-            <FileDown className="h-4 w-4 mr-2" />
-            Exportar
-          </Button>
+          <ExportInventoryButton />
+
+          {/* Botão de Importar (original) */}
+          <InventoryUploadForm />
 
           {/* Botão de Zerar Base (original) */}
           <Button variant="outline" onClick={handleResetDatabase}>
