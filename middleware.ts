@@ -34,6 +34,7 @@ export const config = {
     "/api/cash/:path*", // APIs de caixa
     "/api/reports/:path*", // APIs de relatórios
     "/api/exchanges/:path*", // APIs de trocas
+    "/api/returns/:path*", // APIs de devoluções
 
     // Exclui arquivos estáticos
     "/((?!_next/static|_next/image|favicon.ico).*)",
