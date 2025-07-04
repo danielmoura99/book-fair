@@ -2,8 +2,20 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function POST(req: Request) {
   try {
+    const headers = new Headers();
+    headers.set(
+      "Cache-Control",
+      "no-store, no-cache, must-revalidate, proxy-revalidate"
+    );
+    headers.set("Pragma", "no-cache");
+    headers.set("Expires", "0");
+    headers.set("Surrogate-Control", "no-store");
+
     const body = await req.json();
     const transactionDate = new Date();
     transactionDate.setHours(12);
@@ -106,19 +118,35 @@ export async function POST(req: Request) {
       message += ` (sem diferença de valor)`;
     }
 
-    return NextResponse.json({
-      success: true,
-      message,
-      data: transaction,
-    });
+    return new NextResponse(
+      JSON.stringify({
+        success: true,
+        message,
+        data: transaction,
+      }),
+      {
+        status: 200,
+        headers,
+      }
+    );
   } catch (error) {
     console.error("Erro ao processar troca:", error);
-    return NextResponse.json(
-      {
+
+    const headers = new Headers();
+    headers.set(
+      "Cache-Control",
+      "no-store, no-cache, must-revalidate, proxy-revalidate"
+    );
+
+    return new NextResponse(
+      JSON.stringify({
         error: "Erro ao processar troca",
         message: error instanceof Error ? error.message : "Erro desconhecido",
-      },
-      { status: 500 }
+      }),
+      {
+        status: 500,
+        headers,
+      }
     );
   }
 }
