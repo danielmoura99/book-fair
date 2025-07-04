@@ -18,6 +18,9 @@ interface Book {
   distributor?: string;
   subject?: string;
   barCode?: string;
+  author?: string;
+  medium?: string;
+  location?: string;
 }
 
 export async function POST(req: Request) {
@@ -75,9 +78,9 @@ export async function POST(req: Request) {
                       distributor: book.distributor || existing.distributor,
                       subject: book.subject || existing.subject,
                       barCode: book.barCode || existing.barCode,
-                      author: existing.author,
-                      medium: existing.medium,
-                      location: existing.location,
+                      author: book.author || existing.author,
+                      medium: book.medium || existing.medium,
+                      location: book.location || existing.location,
                     },
                   });
                 } else {
@@ -93,9 +96,9 @@ export async function POST(req: Request) {
                       distributor: book.distributor || "",
                       subject: book.subject || "",
                       barCode: book.barCode,
-                      author: "Não informado",
-                      medium: "Não informado",
-                      location: "ESTOQUE",
+                      author: book.author || "Não informado",
+                      medium: book.medium || "Não informado",
+                      location: book.location || "ESTOQUE",
                     },
                   });
                 }
