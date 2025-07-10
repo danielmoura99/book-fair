@@ -20,10 +20,10 @@ const Navbar = () => {
               pathname === "/" ? "font-bold text-primary" : "text-balance"
             }
           >
-            54º Feira do Livro Espírita
+            54ª Feira do Livro Espírita
           </Link>
           <span className="text-xl -mt-3">
-            31º Feira do Livro Espírita Infantil
+            31ª Feira do Livro Espírita Infantil
           </span>
         </div>
         <Image src="/logouse.png" width={120} height={39} alt="FLE Control" />
