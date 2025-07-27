@@ -43,6 +43,13 @@ model Book {
   updatedAt  DateTime @updatedAt
 
   transactions Transaction[]
+  
+  @@index([title])
+  @@index([author])
+  @@index([publisher])
+  @@index([subject])
+  @@index([location])
+  @@index([createdAt])
 }
 
 model Transaction {
@@ -128,6 +135,15 @@ model InventoryBook {
   subject      String       // Assunto
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
+  
+  @@index([title])
+  @@index([author])
+  @@index([publisher])
+  @@index([distributor])
+  @@index([subject])
+  @@index([location])
+  @@index([quantity])
+  @@index([createdAt])
 }
 
 model InventoryLog {

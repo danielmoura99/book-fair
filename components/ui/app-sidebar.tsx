@@ -33,7 +33,7 @@ const items = [
   },
   {
     title: "Livros",
-    url: "/books",
+    url: "/books/optimized",
     icon: Book,
     color: "#0070f3",
   },
