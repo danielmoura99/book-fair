@@ -1,87 +1,78 @@
 //pages/terminal.tsx
-import { useEffect, useState } from "react";
+"use client";
+
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { Mulish } from "next/font/google";
 import "@/app/globals.css";
 import Image from "next/image";
-import { ConsultTable } from "@/components/terminal/consult-table";
-import { serializeDecimalFields } from "@/lib/utils";
+import { OptimizedConsultTable } from "@/components/terminal/optimized-consult-table";
 import { TerminalEnhancer } from "@/components/terminal/terminal-enhancer";
 
 const mulish = Mulish({
   subsets: ["latin-ext"],
 });
 
-export default function TerminalPage() {
-  const [books, setBooks] = useState([]);
-  const [loading, setLoading] = useState(true);
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // Cache por 5 minutos
+      gcTime: 10 * 60 * 1000, // Manter no cache por 10 minutos
+    },
+  },
+});
 
-  useEffect(() => {
-    setLoading(true);
-    fetch("/api/books")
-      .then((res) => res.json())
-      .then((data) => {
-        // Garantir que os valores decimais sejam corretamente serializados
-        const serializedData = serializeDecimalFields(data);
-        setBooks(serializedData);
-      })
-      .catch((error) => {
-        console.error("Erro ao carregar livros:", error);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  }, []);
-
+function TerminalContent() {
   return (
     <div className={mulish.className}>
       <TerminalEnhancer />
       <div className="min-h-screen bg-background flex flex-col">
-        <div className="flex-1 p-4 container mx-auto">
-          {/* Cabeçalho com Títulos Maiores */}
-          <div className="flex flex-col items-center justify-center mb-10 mt-4">
-            <div className="flex items-center gap-8 mb-3">
+        <div className="flex-1 p-2 container mx-auto">
+          {/* Cabeçalho Compacto */}
+          <div className="flex items-center justify-between mb-4 mt-2 px-4 py-2 bg-white rounded-lg shadow-sm border">
+            {/* Logos menores à esquerda */}
+            <div className="flex items-center gap-4">
               <Image
                 src="/LogoFLE.png"
-                width={130}
-                height={45}
+                width={80}
+                height={28}
                 alt="FLE Control"
               />
               <Image
                 src="/LogoFLEI.png"
-                width={130}
-                height={45}
+                width={80}
+                height={28}
                 alt="FLEI Control"
               />
               <Image
                 src="/logouse.png"
-                width={130}
-                height={45}
+                width={80}
+                height={28}
                 alt="USE Control"
               />
             </div>
-            <div className="text-center">
-              <h1 className="text-3xl font-bold -mb-1">
-                53º Feira do Livro Espírita
+
+            {/* Títulos centralizados e compactos */}
+            <div className="text-center flex-1">
+              <h1 className="text-lg font-bold text-gray-800">
+                54ª Feira do Livro Espírita
               </h1>
-              <div className="text-xl text-muted-foreground mb-2">
-                31º Feira do Livro Espírita Infantil
+              <div className="text-sm text-muted-foreground">
+                31ª Feira do Livro Espírita Infantil
               </div>
-              <h1 className="text-3xl font-bold bg-blue-100 py-3 px-8 rounded-full shadow-sm">
+            </div>
+
+            {/* Badge do terminal à direita */}
+            <div className="bg-blue-100 px-4 py-2 rounded-full">
+              <span className="text-lg font-bold text-blue-800">
                 Terminal de Consulta
-              </h1>
+              </span>
             </div>
           </div>
 
-          {/* Tabela de Consulta */}
+          {/* Tabela de Consulta Otimizada */}
           <div className="bg-background rounded-lg">
-            {loading ? (
-              <div className="text-center p-6 text-2xl">
-                <div className="animate-pulse">Carregando livros...</div>
-              </div>
-            ) : (
-              <ConsultTable data={books} />
-            )}
+            <OptimizedConsultTable />
           </div>
         </div>
 
@@ -94,5 +85,13 @@ export default function TerminalPage() {
         </footer>
       </div>
     </div>
+  );
+}
+
+export default function TerminalPage() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TerminalContent />
+    </QueryClientProvider>
   );
 }

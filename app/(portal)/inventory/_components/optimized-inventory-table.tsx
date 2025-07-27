@@ -34,6 +34,7 @@ import { EditInventoryBookDialog } from "./edit-inventory-book-dialog";
 import { DeleteInventoryBookDialog } from "./delete-inventory-book-dialog";
 import { ExportInventoryButton } from "./export-inventory-button";
 import { InventoryUploadForm } from "../upload/_components/inventory-upload-form";
+import { ZeroInventoryButton } from "./zero-inventory-button";
 
 export function OptimizedInventoryTable() {
   const [page, setPage] = useState(1);
@@ -101,13 +102,6 @@ export function OptimizedInventoryTable() {
     setPage(1);
   };
 
-  const handleResetDatabase = () => {
-    toast({
-      title: "Atenção",
-      description: "Função de zerar base em desenvolvimento",
-      variant: "destructive",
-    });
-  };
 
   if (error) {
     return (
@@ -170,11 +164,7 @@ export function OptimizedInventoryTable() {
 
           <ExportInventoryButton />
           <InventoryUploadForm />
-
-          <Button variant="outline" onClick={handleResetDatabase}>
-            <Trash className="h-4 w-4 mr-2" />
-            Zerar Base
-          </Button>
+          <ZeroInventoryButton onSuccess={() => refetch()} />
         </div>
       </div>
 
@@ -428,6 +418,7 @@ export function OptimizedInventoryTable() {
           onSuccess={() => refetch()}
         />
       )}
+
     </Card>
   );
 }

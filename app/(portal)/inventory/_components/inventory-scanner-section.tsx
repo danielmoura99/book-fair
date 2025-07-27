@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react-hooks/exhaustive-deps */
 "use client";
@@ -43,6 +44,7 @@ export function InventoryScannerSection() {
   const [activeTab, setActiveTab] = useState("scanner");
   const [lastScanned, setLastScanned] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showZeroDialog, setShowZeroDialog] = useState(false);
 
   const barcodeInputRef = useRef<HTMLInputElement>(null);
   const quantityInputRef = useRef<HTMLInputElement>(null);
@@ -165,6 +167,10 @@ export function InventoryScannerSection() {
   const handleSelectSearchResult = (book: any) => {
     addUpdate(book, quantity);
     setSearchTerm("");
+  };
+
+  const handleZeroInventory = () => {
+    setShowZeroDialog(true);
   };
 
   return (
