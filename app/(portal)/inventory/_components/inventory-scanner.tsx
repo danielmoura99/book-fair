@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 //app/(portal)/inventory/_components/inventory-scanner.tsx
 "use client";

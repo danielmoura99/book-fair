@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState, useCallback } from "react";
@@ -13,15 +14,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { 
-  Search, 
-  RefreshCw, 
-  PlusCircle, 
-  Trash, 
+import {
+  Search,
+  RefreshCw,
+  PlusCircle,
+  Trash,
   Pencil,
   ChevronLeft,
   ChevronRight,
-  Filter
+  Filter,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useInventorySearch } from "@/hooks/use-inventory";
@@ -33,13 +34,6 @@ import { EditInventoryBookDialog } from "./edit-inventory-book-dialog";
 import { DeleteInventoryBookDialog } from "./delete-inventory-book-dialog";
 import { ExportInventoryButton } from "./export-inventory-button";
 import { InventoryUploadForm } from "../upload/_components/inventory-upload-form";
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 export function OptimizedInventoryTable() {
   const [page, setPage] = useState(1);
@@ -53,7 +47,7 @@ export function OptimizedInventoryTable() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const { toast } = useToast();
-  
+
   // Debounce da busca para evitar requests excessivos
   const debouncedSearch = useDebounce(searchTerm, 300);
 
@@ -66,15 +60,18 @@ export function OptimizedInventoryTable() {
     filterZeroStock,
   });
 
-  const handleSort = useCallback((column: string) => {
-    if (sortBy === column) {
-      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
-    } else {
-      setSortBy(column);
-      setSortOrder("asc");
-    }
-    setPage(1);
-  }, [sortBy, sortOrder]);
+  const handleSort = useCallback(
+    (column: string) => {
+      if (sortBy === column) {
+        setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+      } else {
+        setSortBy(column);
+        setSortOrder("asc");
+      }
+      setPage(1);
+    },
+    [sortBy, sortOrder]
+  );
 
   const handleSearch = useCallback((value: string) => {
     setSearchTerm(value);
@@ -185,11 +182,15 @@ export function OptimizedInventoryTable() {
       {data?.stats && (
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4 text-sm">
           <div className="bg-muted p-3 rounded">
-            <div className="font-medium text-muted-foreground">Total de Livros</div>
+            <div className="font-medium text-muted-foreground">
+              Total de Livros
+            </div>
             <div className="text-2xl font-bold">{data.stats.totalBooks}</div>
           </div>
           <div className="bg-muted p-3 rounded">
-            <div className="font-medium text-muted-foreground">Quantidade Total</div>
+            <div className="font-medium text-muted-foreground">
+              Quantidade Total
+            </div>
             <div className="text-2xl font-bold">{data.stats.totalQuantity}</div>
           </div>
           <div className="bg-muted p-3 rounded">
@@ -201,7 +202,9 @@ export function OptimizedInventoryTable() {
             <div className="text-2xl font-bold">{data.stats.publishers}</div>
           </div>
           <div className="bg-muted p-3 rounded">
-            <div className="font-medium text-muted-foreground">Distribuidores</div>
+            <div className="font-medium text-muted-foreground">
+              Distribuidores
+            </div>
             <div className="text-2xl font-bold">{data.stats.distributors}</div>
           </div>
         </div>
@@ -211,9 +214,13 @@ export function OptimizedInventoryTable() {
       {data?.pagination && (
         <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
           <span>
-            Mostrando {((data.pagination.page - 1) * data.pagination.limit) + 1} até{" "}
-            {Math.min(data.pagination.page * data.pagination.limit, data.pagination.total)} de{" "}
-            {data.pagination.total} livros
+            Mostrando {(data.pagination.page - 1) * data.pagination.limit + 1}{" "}
+            até{" "}
+            {Math.min(
+              data.pagination.page * data.pagination.limit,
+              data.pagination.total
+            )}{" "}
+            de {data.pagination.total} livros
           </span>
           <span>
             Página {data.pagination.page} de {data.pagination.totalPages}
@@ -226,43 +233,50 @@ export function OptimizedInventoryTable() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead 
+              <TableHead
                 className="font-semibold text-black cursor-pointer hover:bg-gray-50"
                 onClick={() => handleSort("codFle")}
               >
-                Código FLE {sortBy === "codFle" && (sortOrder === "asc" ? "↑" : "↓")}
+                Código FLE{" "}
+                {sortBy === "codFle" && (sortOrder === "asc" ? "↑" : "↓")}
               </TableHead>
-              <TableHead 
+              <TableHead
                 className="font-semibold text-black cursor-pointer hover:bg-gray-50"
                 onClick={() => handleSort("title")}
               >
                 Título {sortBy === "title" && (sortOrder === "asc" ? "↑" : "↓")}
               </TableHead>
-              <TableHead 
+              <TableHead
                 className="font-semibold text-black cursor-pointer hover:bg-gray-50"
                 onClick={() => handleSort("publisher")}
               >
-                Editora {sortBy === "publisher" && (sortOrder === "asc" ? "↑" : "↓")}
+                Editora{" "}
+                {sortBy === "publisher" && (sortOrder === "asc" ? "↑" : "↓")}
               </TableHead>
-              <TableHead 
+              <TableHead
                 className="font-semibold text-black cursor-pointer hover:bg-gray-50"
                 onClick={() => handleSort("distributor")}
               >
-                Distribuidor {sortBy === "distributor" && (sortOrder === "asc" ? "↑" : "↓")}
+                Distribuidor{" "}
+                {sortBy === "distributor" && (sortOrder === "asc" ? "↑" : "↓")}
               </TableHead>
-              <TableHead 
+              <TableHead
                 className="font-semibold text-black text-right cursor-pointer hover:bg-gray-50"
                 onClick={() => handleSort("quantity")}
               >
-                Quantidade {sortBy === "quantity" && (sortOrder === "asc" ? "↑" : "↓")}
+                Quantidade{" "}
+                {sortBy === "quantity" && (sortOrder === "asc" ? "↑" : "↓")}
               </TableHead>
-              <TableHead 
+              <TableHead
                 className="font-semibold text-black text-right cursor-pointer hover:bg-gray-50"
                 onClick={() => handleSort("coverPrice")}
               >
-                Preço Feira {sortBy === "coverPrice" && (sortOrder === "asc" ? "↑" : "↓")}
+                Preço Feira{" "}
+                {sortBy === "coverPrice" && (sortOrder === "asc" ? "↑" : "↓")}
               </TableHead>
-              <TableHead className="font-semibold text-black text-right">Ações</TableHead>
+              <TableHead className="font-semibold text-black text-right">
+                Ações
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -297,7 +311,11 @@ export function OptimizedInventoryTable() {
                   <TableCell>{book.publisher}</TableCell>
                   <TableCell>{book.distributor}</TableCell>
                   <TableCell className="text-right font-medium">
-                    <span className={book.quantity === 0 ? "text-red-500" : "text-green-600"}>
+                    <span
+                      className={
+                        book.quantity === 0 ? "text-red-500" : "text-green-600"
+                      }
+                    >
                       {book.quantity}
                     </span>
                   </TableCell>
@@ -329,10 +347,9 @@ export function OptimizedInventoryTable() {
             ) : (
               <TableRow>
                 <TableCell colSpan={7} className="text-center py-8">
-                  {searchTerm 
-                    ? "Nenhum livro encontrado para esta busca" 
-                    : "Nenhum livro no inventário"
-                  }
+                  {searchTerm
+                    ? "Nenhum livro encontrado para esta busca"
+                    : "Nenhum livro no inventário"}
                 </TableCell>
               </TableRow>
             )}
@@ -353,9 +370,11 @@ export function OptimizedInventoryTable() {
             <ChevronLeft className="h-4 w-4" />
             Anterior
           </Button>
-          
+
           <div className="flex items-center space-x-1">
-            {Array.from({ length: Math.min(5, data.pagination.totalPages) }).map((_, index) => {
+            {Array.from({
+              length: Math.min(5, data.pagination.totalPages),
+            }).map((_, index) => {
               const pageNumber = Math.max(1, page - 2) + index;
               if (pageNumber <= data.pagination.totalPages) {
                 return (

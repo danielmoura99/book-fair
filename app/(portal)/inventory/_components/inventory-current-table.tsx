@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 //app/(portal)/inventory/_components/inventory-current-table.tsx
 "use client";
 
