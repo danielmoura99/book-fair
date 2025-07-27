@@ -179,30 +179,27 @@ export function OptimizedConsultTable() {
 
   return (
     <div className="space-y-8">
-      {/* Barra de Busca */}
-      <div className="max-w-3xl mx-auto">
+      {/* Barra de Busca Responsiva */}
+      <div className="max-w-3xl mx-auto px-2 sm:px-0">
         <div className="relative">
-          <div className="relative flex items-center h-16 rounded-full border-2 shadow-sm hover:shadow-md focus-within:shadow-md">
-            <Search className="absolute left-6 h-8 w-8 text-muted-foreground" />
+          <div className="relative flex items-center h-12 sm:h-16 rounded-full border-2 shadow-sm hover:shadow-md focus-within:shadow-md">
+            <Search className="absolute left-4 sm:left-6 h-5 w-5 sm:h-8 sm:w-8 text-muted-foreground" />
             <Input
-              className="pl-16 pr-6 h-full w-full text-xl rounded-full border-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-400"
-              placeholder="Digite aqui para buscar livros..."
+              className="pl-12 sm:pl-16 pr-4 sm:pr-6 h-full w-full text-base sm:text-xl rounded-full border-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-400"
+              placeholder="Buscar livros..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              style={{ fontSize: "1.25rem" }}
             />
           </div>
-          <p className="mt-2 text-center text-muted-foreground text-lg">
-            Você pode buscar por título, autor, código FLE, editora, ou assunto
+          <p className="mt-2 text-center text-muted-foreground text-sm sm:text-lg">
+            Busque por título, autor, código FLE, editora ou assunto
           </p>
         </div>
       </div>
 
-      {/* Tabela de Resultados com Cabeçalhos Maiores */}
-      <div className="rounded-lg border-2">
-        {/* Container com scroll horizontal */}
+      {/* Layout Desktop - Tabela */}
+      <div className="hidden lg:block rounded-lg border-2">
         <div className="overflow-x-auto" style={{ width: "100%" }}>
-          {/* ScrollArea para scroll vertical */}
           <ScrollArea className="h-[calc(100vh-400px)]">
             <div className="min-w-[1100px]">
               <Table className="w-full">
@@ -245,7 +242,6 @@ export function OptimizedConsultTable() {
                 </TableHeader>
                 <TableBody>
                   {isLoading ? (
-                    // Loading skeleton
                     Array.from({ length: 10 }).map((_, index) => (
                       <TableRow key={index} className="bg-white">
                         {Array.from({ length: 11 }).map((_, cellIndex) => (
@@ -326,18 +322,131 @@ export function OptimizedConsultTable() {
         </div>
       </div>
 
+      {/* Layout Mobile/Tablet - Cards */}
+      <div className="block lg:hidden">
+        <ScrollArea className="h-[calc(100vh-350px)]">
+          <div className="space-y-3">
+            {isLoading ? (
+              Array.from({ length: 5 }).map((_, index) => (
+                <div key={index} className="bg-white rounded-lg border p-4">
+                  <div className="space-y-2">
+                    <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4" />
+                    <div className="h-4 bg-gray-200 rounded animate-pulse w-1/2" />
+                    <div className="h-4 bg-gray-200 rounded animate-pulse w-2/3" />
+                  </div>
+                </div>
+              ))
+            ) : filteredBooks.length ? (
+              filteredBooks.map((book, index) => (
+                <div
+                  key={book.id}
+                  className={`rounded-lg border p-3 sm:p-4 ${
+                    index % 2 === 0 ? "bg-white" : "bg-gray-50"
+                  }`}
+                >
+                  <div className="space-y-2">
+                    {/* Linha 1: Título e Código */}
+                    <div className="flex justify-between items-start">
+                      <h3 className="font-medium text-sm sm:text-base flex-1 pr-2">
+                        {book.title}
+                      </h3>
+                      <span className="text-xs bg-gray-100 px-2 py-1 rounded">
+                        {book.codFle}
+                      </span>
+                    </div>
+                    
+                    {/* Linha 2: Autor e Médium */}
+                    <div className="text-sm text-gray-600">
+                      <span className="font-medium">Autor:</span> {book.author}
+                      {book.medium && book.medium !== book.author && (
+                        <span className="ml-2">
+                          <span className="font-medium">Médium:</span> {book.medium}
+                        </span>
+                      )}
+                    </div>
+                    
+                    {/* Linha 3: Editora e Local */}
+                    <div className="text-sm text-gray-600">
+                      <span className="font-medium">Editora:</span> {book.publisher}
+                      <span className="ml-2">
+                        <span className="font-medium">Local:</span> {book.location}
+                      </span>
+                    </div>
+                    
+                    {/* Linha 4: Assunto */}
+                    <div className="text-sm text-gray-600">
+                      <span className="font-medium">Assunto:</span> {book.subject}
+                    </div>
+                    
+                    {/* Linha 5: Preços e Quantidade */}
+                    <div className="flex justify-between items-center pt-2 border-t">
+                      <div className="flex items-center gap-4">
+                        <div>
+                          <div className="text-xs text-gray-500">Quantidade</div>
+                          <div
+                            className={`font-bold ${
+                              book.quantity === 0 ? "text-red-500" : "text-green-600"
+                            }`}
+                          >
+                            {book.quantity}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-gray-500">Preço Feira</div>
+                          <div className="font-medium text-blue-600">
+                            {new Intl.NumberFormat("pt-BR", {
+                              style: "currency",
+                              currency: "BRL",
+                            }).format(Number(book.coverPrice))}
+                          </div>
+                        </div>
+                        {Number(book.price) > 0 && (
+                          <div>
+                            <div className="text-xs text-gray-500">Preço Normal</div>
+                            <div className="text-sm text-gray-600">
+                              {new Intl.NumberFormat("pt-BR", {
+                                style: "currency",
+                                currency: "BRL",
+                              }).format(Number(book.price))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {Number(book.price) > Number(book.coverPrice) && (
+                        <div className="text-right">
+                          <div className="text-xs text-gray-500">Economia</div>
+                          {calculateDiscount(Number(book.price), Number(book.coverPrice))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-8">
+                <div className="text-lg text-gray-500">
+                  {searchTerm
+                    ? "Nenhum livro encontrado para esta busca"
+                    : "Carregando livros..."}
+                </div>
+              </div>
+            )}
+          </div>
+        </ScrollArea>
+      </div>
+
       {/* Contador de Resultados e Paginação */}
-      <div className="flex items-center justify-between">
-        <div className="text-lg text-muted-foreground">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="text-sm sm:text-lg text-muted-foreground text-center sm:text-left">
           {data?.pagination ? (
             <>
               {searchTerm && filteredBooks.length > 0
                 ? `Encontrados ${filteredBooks.length} livros`
                 : `Total de ${data.pagination.total} livros disponíveis`}
               {data.pagination.totalPages > 1 && (
-                <span className="ml-2 text-sm">
-                  (Página {data.pagination.page} de {data.pagination.totalPages}
-                  )
+                <span className="block sm:inline sm:ml-2 text-xs sm:text-sm">
+                  (Página {data.pagination.page} de {data.pagination.totalPages})
                 </span>
               )}
             </>
@@ -354,10 +463,11 @@ export function OptimizedConsultTable() {
               size="sm"
               onClick={() => setPage(page - 1)}
               disabled={!data.pagination.hasPrev || isLoading}
+              className="text-xs sm:text-sm"
             >
               Anterior
             </Button>
-            <span className="text-sm px-4">
+            <span className="text-xs sm:text-sm px-2 sm:px-4">
               {page} de {data.pagination.totalPages}
             </span>
             <Button
@@ -365,6 +475,7 @@ export function OptimizedConsultTable() {
               size="sm"
               onClick={() => setPage(page + 1)}
               disabled={!data.pagination.hasNext || isLoading}
+              className="text-xs sm:text-sm"
             >
               Próxima
             </Button>
@@ -372,10 +483,13 @@ export function OptimizedConsultTable() {
         )}
       </div>
 
-      {/* Instrução de rolagem horizontal */}
-      <div className="text-center text-sm text-muted-foreground">
-        <p>
+      {/* Instrução de navegação */}
+      <div className="text-center text-xs sm:text-sm text-muted-foreground">
+        <p className="hidden lg:block">
           Role a tabela para a direita ou esquerda para ver mais informações
+        </p>
+        <p className="block lg:hidden">
+          Toque em um livro para ver todos os detalhes
         </p>
       </div>
     </div>
