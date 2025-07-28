@@ -27,6 +27,7 @@ interface InventoryUpdate {
   book: InventoryBook;
   newQuantity: number;
   previousQuantity: number;
+  timestamp: number;
 }
 
 interface InventoryContextType {
@@ -82,6 +83,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
           ...updatedItems[existingIndex],
           newQuantity:
             updatedItems[existingIndex].previousQuantity + newQuantity,
+          timestamp: Date.now(),
         };
         return updatedItems;
       } else {
@@ -94,6 +96,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
             book,
             newQuantity: book.quantity + newQuantity,
             previousQuantity: book.quantity,
+            timestamp: Date.now(),
           },
         ];
       }

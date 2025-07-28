@@ -21,15 +21,17 @@ export function UpdatesList() {
   const [editItemId, setEditItemId] = useState<string | null>(null);
   const [editQuantity, setEditQuantity] = useState<number>(0);
 
-  // Filtragem de itens
-  const filteredItems = pendingUpdates.filter(
-    (item) =>
-      item.book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.book.codFle.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (item.book.barCode?.toLowerCase() || "").includes(
-        searchTerm.toLowerCase()
-      )
-  );
+  // Filtragem e ordenação de itens (mais novo primeiro)
+  const filteredItems = pendingUpdates
+    .filter(
+      (item) =>
+        item.book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.book.codFle.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (item.book.barCode?.toLowerCase() || "").includes(
+          searchTerm.toLowerCase()
+        )
+    )
+    .sort((a, b) => b.timestamp - a.timestamp);
 
   const handleStartEdit = (bookId: string, currentQuantity: number) => {
     setEditItemId(bookId);
@@ -96,7 +98,7 @@ export function UpdatesList() {
                   <TableCell>
                     <div className="font-medium">{item.book.title}</div>
                     <div className="text-xs text-muted-foreground">
-                      {item.book.publisher} | {item.book.author}
+                      {item.book.publisher} | {item.book.subject}
                     </div>
                   </TableCell>
                   <TableCell className="text-center">
