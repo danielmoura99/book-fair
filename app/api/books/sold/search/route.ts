@@ -1,6 +1,7 @@
 //app/api/books/sold/search/route.ts
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
+import { TransactionType } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -35,7 +36,7 @@ export async function GET(request: NextRequest) {
     const whereClause = {
       transactions: {
         some: {
-          type: "SALE", // Apenas vendas, não trocas
+          type: TransactionType.SALE, // Apenas vendas, não trocas
         },
       },
       ...searchFilters,

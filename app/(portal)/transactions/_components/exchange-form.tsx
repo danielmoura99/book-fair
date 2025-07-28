@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
@@ -5,10 +6,10 @@ import { useState, useEffect } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Book, TransactionType } from "@prisma/client";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { TransactionType } from "@prisma/client";
+import { useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
-import { Form, FormField, FormItem, FormLabel } from "@/components/ui/form";
+import { Form, FormLabel } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { PaymentMethodSelect } from "./payment-method-select";
 import { SoldBookSearch } from "./sold-book-search";
@@ -76,7 +77,7 @@ export function ExchangeForm({ mode, onSuccess }: ExchangeFormProps) {
 
   const handleReturnedBookSelect = (book: any) => {
     form.setValue("returnedBookId", book.id);
-    
+
     if (mode === "DEVOLUCAO") {
       setExchange({
         returnedBook: book,
@@ -90,37 +91,37 @@ export function ExchangeForm({ mode, onSuccess }: ExchangeFormProps) {
     if (newBookId && exchange?.newBook) {
       const priceDifference =
         Number(exchange.newBook.coverPrice) - Number(book.coverPrice);
-      setExchange({ 
-        returnedBook: book, 
-        newBook: exchange.newBook, 
-        priceDifference 
+      setExchange({
+        returnedBook: book,
+        newBook: exchange.newBook,
+        priceDifference,
       });
     } else {
       // Apenas salvar o livro devolvido por enquanto
-      setExchange({ 
-        returnedBook: book, 
-        priceDifference: 0 
+      setExchange({
+        returnedBook: book,
+        priceDifference: 0,
       });
     }
   };
 
   const handleNewBookSelect = (book: any) => {
     form.setValue("newBookId", book.id);
-    
+
     if (exchange?.returnedBook) {
       const priceDifference =
         Number(book.coverPrice) - Number(exchange.returnedBook.coverPrice);
-      setExchange({ 
-        returnedBook: exchange.returnedBook, 
-        newBook: book, 
-        priceDifference 
+      setExchange({
+        returnedBook: exchange.returnedBook,
+        newBook: book,
+        priceDifference,
       });
     } else {
       // Salvar apenas o livro novo por enquanto
-      setExchange({ 
-        returnedBook: null as any, 
-        newBook: book, 
-        priceDifference: 0 
+      setExchange({
+        returnedBook: null as any,
+        newBook: book,
+        priceDifference: 0,
       });
     }
   };
@@ -214,7 +215,11 @@ export function ExchangeForm({ mode, onSuccess }: ExchangeFormProps) {
           </Alert>
         )}
 
-        <div className={mode === "TROCA" ? "grid grid-cols-1 lg:grid-cols-2 gap-4" : ""}>
+        <div
+          className={
+            mode === "TROCA" ? "grid grid-cols-1 lg:grid-cols-2 gap-4" : ""
+          }
+        >
           <div>
             <FormLabel className="text-sm font-medium">
               {mode === "DEVOLUCAO"
@@ -224,9 +229,10 @@ export function ExchangeForm({ mode, onSuccess }: ExchangeFormProps) {
             <div className="mt-2">
               <SoldBookSearch
                 onSelectBook={handleReturnedBookSelect}
-                placeholder={mode === "DEVOLUCAO" 
-                  ? "Buscar livro para devolução..." 
-                  : "Buscar livro devolvido..."
+                placeholder={
+                  mode === "DEVOLUCAO"
+                    ? "Buscar livro para devolução..."
+                    : "Buscar livro devolvido..."
                 }
                 disabled={loading}
               />

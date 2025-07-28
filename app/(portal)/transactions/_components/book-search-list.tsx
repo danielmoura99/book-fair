@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 //app/(portal)/transactions/_components/book-search-list.tsx
 "use client";
 
@@ -16,7 +17,10 @@ interface BookSearchListProps {
   disabled?: boolean;
 }
 
-export function BookSearchList({ onSelectBook, disabled }: BookSearchListProps) {
+export function BookSearchList({
+  onSelectBook,
+  disabled,
+}: BookSearchListProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [isOpen, setIsOpen] = useState(false);
 
@@ -26,9 +30,9 @@ export function BookSearchList({ onSelectBook, disabled }: BookSearchListProps) 
   // Expandir busca da API para incluir variações de nomes (igual ao terminal)
   const expandedSearch = useMemo(() => {
     if (!debouncedSearch.trim()) return "";
-    
+
     const search = debouncedSearch.toLowerCase().trim();
-    
+
     // Se a busca contém variações conhecidas, expandir para buscar as alternativas também
     if (search.includes("joana")) {
       return "joanna"; // Buscar pela grafia correta na API
@@ -36,7 +40,7 @@ export function BookSearchList({ onSelectBook, disabled }: BookSearchListProps) 
     if (search.includes("angelis") && !search.includes("ângelis")) {
       return "ângelis"; // Buscar pela grafia correta na API
     }
-    
+
     return debouncedSearch;
   }, [debouncedSearch]);
 
@@ -51,7 +55,7 @@ export function BookSearchList({ onSelectBook, disabled }: BookSearchListProps) 
   // Filtro adicional no frontend para tratar variações de nomes (igual ao terminal)
   const filteredBooks = useMemo(() => {
     if (!data?.books) return [];
-    
+
     // Se não há termo de busca, retornar apenas alguns livros para não sobrecarregar
     if (!searchTerm.trim()) return data.books.slice(0, 20);
 
@@ -162,7 +166,7 @@ export function BookSearchList({ onSelectBook, disabled }: BookSearchListProps) 
                         key={book.id}
                         variant="ghost"
                         className="w-full justify-start h-auto p-2 text-left"
-                        onClick={() => handleSelectBook(book)}
+                        onClick={() => handleSelectBook(book as any)}
                         disabled={book.quantity <= 0}
                       >
                         <div className="flex items-center justify-between w-full">
@@ -178,10 +182,16 @@ export function BookSearchList({ onSelectBook, disabled }: BookSearchListProps) 
                             <div className="text-sm font-medium text-blue-600">
                               {formatPrice(Number(book.coverPrice))}
                             </div>
-                            <div className={`text-xs ${
-                              book.quantity <= 0 ? "text-red-500" : "text-green-600"
-                            }`}>
-                              {book.quantity <= 0 ? "Sem estoque" : `${book.quantity} disp.`}
+                            <div
+                              className={`text-xs ${
+                                book.quantity <= 0
+                                  ? "text-red-500"
+                                  : "text-green-600"
+                              }`}
+                            >
+                              {book.quantity <= 0
+                                ? "Sem estoque"
+                                : `${book.quantity} disp.`}
                             </div>
                           </div>
                           <Plus className="h-4 w-4 ml-2 text-muted-foreground" />
@@ -210,10 +220,7 @@ export function BookSearchList({ onSelectBook, disabled }: BookSearchListProps) 
 
       {/* Overlay para fechar quando clicar fora */}
       {isOpen && (
-        <div
-          className="fixed inset-0 z-40"
-          onClick={() => setIsOpen(false)}
-        />
+        <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
       )}
     </div>
   );

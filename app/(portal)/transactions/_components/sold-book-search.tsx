@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 //app/(portal)/transactions/_components/sold-book-search.tsx
 "use client";
 
@@ -18,11 +19,11 @@ interface SoldBookSearchProps {
   label?: string;
 }
 
-export function SoldBookSearch({ 
-  onSelectBook, 
-  disabled, 
+export function SoldBookSearch({
+  onSelectBook,
+  disabled,
   placeholder = "Digite para buscar livros vendidos...",
-  label = "Buscar livro vendido"
+  label = "Buscar livro vendido",
 }: SoldBookSearchProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [isOpen, setIsOpen] = useState(false);
@@ -34,9 +35,9 @@ export function SoldBookSearch({
   // Expandir busca da API para incluir variações de nomes (igual ao terminal)
   const expandedSearch = useMemo(() => {
     if (!debouncedSearch.trim()) return "";
-    
+
     const search = debouncedSearch.toLowerCase().trim();
-    
+
     // Se a busca contém variações conhecidas, expandir para buscar as alternativas também
     if (search.includes("joana")) {
       return "joanna"; // Buscar pela grafia correta na API
@@ -44,7 +45,7 @@ export function SoldBookSearch({
     if (search.includes("angelis") && !search.includes("ângelis")) {
       return "ângelis"; // Buscar pela grafia correta na API
     }
-    
+
     return debouncedSearch;
   }, [debouncedSearch]);
 
@@ -59,7 +60,7 @@ export function SoldBookSearch({
   // Filtro adicional no frontend para tratar variações de nomes (igual ao terminal)
   const filteredBooks = useMemo(() => {
     if (!data?.books) return [];
-    
+
     // Se não há termo de busca, retornar apenas alguns livros para não sobrecarregar
     if (!searchTerm.trim()) return data.books.slice(0, 20);
 
@@ -164,7 +165,8 @@ export function SoldBookSearch({
             {selectedBook.title}
           </div>
           <div className="text-xs text-green-600">
-            {selectedBook.author} • {selectedBook.codFle} • {formatPrice(selectedBook.coverPrice)}
+            {selectedBook.author} • {selectedBook.codFle} •{" "}
+            {formatPrice(selectedBook.coverPrice)}
           </div>
         </div>
       )}
@@ -233,10 +235,7 @@ export function SoldBookSearch({
 
       {/* Overlay para fechar quando clicar fora */}
       {isOpen && (
-        <div
-          className="fixed inset-0 z-40"
-          onClick={() => setIsOpen(false)}
-        />
+        <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
       )}
     </div>
   );
