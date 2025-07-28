@@ -4,6 +4,7 @@ import {
   BookDown,
   CircleDollarSign,
   Handshake,
+  Printer,
 } from "lucide-react";
 
 import {
@@ -48,6 +49,12 @@ const items = [
     url: "/relatorios",
     icon: BookDown,
     color: "#0070f3",
+  },
+  {
+    title: "Impressora",
+    url: "/settings/printer",
+    icon: Printer,
+    color: "#10b981",
   },
 ];
 

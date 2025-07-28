@@ -9,15 +9,10 @@ import { Book, TransactionType } from "@prisma/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { Form, FormField, FormItem, FormLabel } from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { PaymentMethodSelect } from "./payment-method-select";
+import { SoldBookSearch } from "./sold-book-search";
+import { BookSearchList } from "./book-search-list";
 import { formatPrice } from "@/lib/utils";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
@@ -31,8 +26,8 @@ const exchangeSchema = z.object({
 });
 
 interface ExchangeItem {
-  returnedBook: Book;
-  newBook?: Book;
+  returnedBook: any; // Pode ser Book ou SerializedBook
+  newBook?: any; // Pode ser Book ou SerializedBook
   priceDifference: number;
 }
 
@@ -65,23 +60,7 @@ export function ExchangeForm({ mode, onSuccess }: ExchangeFormProps) {
     }
   }, []);
 
-  const { data: soldBooks } = useQuery<Book[]>({
-    queryKey: ["soldBooks"],
-    queryFn: async () => {
-      const timestamp = Date.now();
-      const response = await axios.get(`/api/books/sold?t=${timestamp}`);
-      return response.data;
-    },
-  });
-
-  const { data: allBooks } = useQuery<Book[]>({
-    queryKey: ["books"],
-    queryFn: async () => {
-      const response = await axios.get("/api/books");
-      return response.data;
-    },
-    enabled: mode === "TROCA",
-  });
+  // Não precisamos mais das queries antigas - os componentes otimizados fazem as buscas
 
   const form = useForm<z.infer<typeof exchangeSchema>>({
     resolver: zodResolver(exchangeSchema),
@@ -95,30 +74,54 @@ export function ExchangeForm({ mode, onSuccess }: ExchangeFormProps) {
     form.reset();
   };
 
-  const updateExchangeCalculation = (
-    returnedBookId: string,
-    newBookId?: string
-  ) => {
-    if (!soldBooks || !returnedBookId) return;
-
-    const returnedBook = soldBooks.find((b) => b.id === returnedBookId);
-    if (!returnedBook) return;
-
+  const handleReturnedBookSelect = (book: any) => {
+    form.setValue("returnedBookId", book.id);
+    
     if (mode === "DEVOLUCAO") {
       setExchange({
-        returnedBook,
-        priceDifference: -Number(returnedBook.coverPrice),
+        returnedBook: book,
+        priceDifference: -Number(book.coverPrice),
       });
       return;
     }
 
-    if (!allBooks || !newBookId) return;
-    const newBook = allBooks.find((b) => b.id === newBookId);
-
-    if (returnedBook && newBook) {
+    // Para TROCA, manter o livro devolvido e recalcular se já há livro novo
+    const newBookId = form.getValues("newBookId");
+    if (newBookId && exchange?.newBook) {
       const priceDifference =
-        Number(newBook.coverPrice) - Number(returnedBook.coverPrice);
-      setExchange({ returnedBook, newBook, priceDifference });
+        Number(exchange.newBook.coverPrice) - Number(book.coverPrice);
+      setExchange({ 
+        returnedBook: book, 
+        newBook: exchange.newBook, 
+        priceDifference 
+      });
+    } else {
+      // Apenas salvar o livro devolvido por enquanto
+      setExchange({ 
+        returnedBook: book, 
+        priceDifference: 0 
+      });
+    }
+  };
+
+  const handleNewBookSelect = (book: any) => {
+    form.setValue("newBookId", book.id);
+    
+    if (exchange?.returnedBook) {
+      const priceDifference =
+        Number(book.coverPrice) - Number(exchange.returnedBook.coverPrice);
+      setExchange({ 
+        returnedBook: exchange.returnedBook, 
+        newBook: book, 
+        priceDifference 
+      });
+    } else {
+      // Salvar apenas o livro novo por enquanto
+      setExchange({ 
+        returnedBook: null as any, 
+        newBook: book, 
+        priceDifference: 0 
+      });
     }
   };
 
@@ -132,11 +135,8 @@ export function ExchangeForm({ mode, onSuccess }: ExchangeFormProps) {
       return;
     }
 
-    if (mode === "TROCA" && !values.newBookId) {
-      form.setError("newBookId", {
-        type: "required",
-        message: "Selecione o livro para troca",
-      });
+    if (mode === "TROCA" && !exchange?.newBook) {
+      setError("Selecione o livro para troca");
       return;
     }
 
@@ -147,8 +147,8 @@ export function ExchangeForm({ mode, onSuccess }: ExchangeFormProps) {
       const endpoint = mode === "DEVOLUCAO" ? "/api/returns" : "/api/exchanges";
 
       const payload = {
-        returnedBookId: values.returnedBookId,
-        newBookId: values.newBookId,
+        returnedBookId: exchange.returnedBook.id,
+        newBookId: exchange.newBook?.id,
         paymentMethod: values.paymentMethod,
         type: TransactionType.EXCHANGE,
         priceDifference: exchange.priceDifference,
@@ -159,8 +159,8 @@ export function ExchangeForm({ mode, onSuccess }: ExchangeFormProps) {
       await axios.post(endpoint, payload);
 
       // ✅ NOVO: Invalidar queries para atualizar dados
-      await queryClient.invalidateQueries({ queryKey: ["books"] });
-      await queryClient.invalidateQueries({ queryKey: ["soldBooks"] });
+      await queryClient.invalidateQueries({ queryKey: ["books-search"] });
+      await queryClient.invalidateQueries({ queryKey: ["sold-books-search"] });
 
       // ✅ NOVO: Refresh da página para atualizar caixa
       router.refresh();
@@ -214,80 +214,37 @@ export function ExchangeForm({ mode, onSuccess }: ExchangeFormProps) {
           </Alert>
         )}
 
-        <div className={mode === "TROCA" ? "grid grid-cols-2 gap-4" : ""}>
-          <FormField
-            control={form.control}
-            name="returnedBookId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>
-                  {mode === "DEVOLUCAO"
-                    ? "Livro para Devolução"
-                    : "Livro Devolvido"}
-                </FormLabel>
-                <Select
-                  onValueChange={(value) => {
-                    field.onChange(value);
-                    updateExchangeCalculation(
-                      value,
-                      mode === "TROCA" ? form.getValues("newBookId") : undefined
-                    );
-                  }}
-                  value={field.value || ""} // ✅ NOVO: Valor controlado
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o livro" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {/* ✅ CORRIGIDO: div com overflow nativo ao invés de ScrollArea */}
-                    <div className="max-h-[200px] overflow-auto">
-                      {soldBooks?.map((book) => (
-                        <SelectItem key={book.id} value={book.id}>
-                          {book.codFle} - {book.title}
-                        </SelectItem>
-                      ))}
-                    </div>
-                  </SelectContent>
-                </Select>
-              </FormItem>
-            )}
-          />
+        <div className={mode === "TROCA" ? "grid grid-cols-1 lg:grid-cols-2 gap-4" : ""}>
+          <div>
+            <FormLabel className="text-sm font-medium">
+              {mode === "DEVOLUCAO"
+                ? "Livro para Devolução"
+                : "Livro Devolvido"}
+            </FormLabel>
+            <div className="mt-2">
+              <SoldBookSearch
+                onSelectBook={handleReturnedBookSelect}
+                placeholder={mode === "DEVOLUCAO" 
+                  ? "Buscar livro para devolução..." 
+                  : "Buscar livro devolvido..."
+                }
+                disabled={loading}
+              />
+            </div>
+          </div>
 
           {mode === "TROCA" && (
-            <FormField
-              control={form.control}
-              name="newBookId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Livro para Troca</FormLabel>
-                  <Select
-                    onValueChange={(value) => {
-                      field.onChange(value);
-                      updateExchangeCalculation(
-                        form.getValues("returnedBookId"),
-                        value
-                      );
-                    }}
-                    value={field.value || ""} // ✅ NOVO: Valor controlado
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o livro" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {/* ✅ CORRIGIDO: div com overflow nativo ao invés de ScrollArea */}
-                      <div className="max-h-[200px] overflow-auto">
-                        {allBooks?.map((book) => (
-                          <SelectItem key={book.id} value={book.id}>
-                            {book.codFle} - {book.title} -{" "}
-                            {formatPrice(Number(book.coverPrice))}
-                          </SelectItem>
-                        ))}
-                      </div>
-                    </SelectContent>
-                  </Select>
-                </FormItem>
-              )}
-            />
+            <div>
+              <FormLabel className="text-sm font-medium">
+                Livro para Troca
+              </FormLabel>
+              <div className="mt-2">
+                <BookSearchList
+                  onSelectBook={handleNewBookSelect}
+                  disabled={loading || !exchange?.returnedBook}
+                />
+              </div>
+            </div>
           )}
         </div>
 

@@ -86,8 +86,13 @@ export function usePrinter() {
     payments: PaymentForPrint[],
     sequentialId?: number
   ): SaleData => {
+    // Incluir informação da estação nos dados de impressão
+    const stationName = typeof window !== "undefined" 
+      ? localStorage.getItem('stationName') || 'Estação não identificada'
+      : 'Estação não identificada';
+
     return {
-      operatorName,
+      operatorName: `${operatorName} (${stationName})`,
       totalAmount,
       items: cartItems.map((item) => ({
         title: item.book.title,

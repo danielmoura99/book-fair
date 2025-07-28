@@ -248,8 +248,8 @@ export const generateReceiptCommands = (saleData: SaleData): string => {
   // Cabeçalho centralizado
   receipt += CENTER;
   receipt += BOLD_ON;
-  receipt += "FLE - FEIRA DE LIVROS ESPÍRITAS" + NEWLINE;
-  receipt += "BANCA DO LIVRO ESPIRITO" + NEWLINE;
+  receipt += "FLE - FEIRA DE LIVROS ESPÍRITA" + NEWLINE;
+  receipt += "BANCA DO LIVRO ESPÍRITA" + NEWLINE;
   receipt += BOLD_OFF;
   receipt += "================================" + NEWLINE;
   receipt += LEFT;
@@ -310,6 +310,15 @@ export const generateReceiptCommands = (saleData: SaleData): string => {
   receipt += CUT;
 
   return receipt;
+};
+
+/**
+ * Testa a conexão com a impressora
+ */
+export const testPrinterConnection = async (
+  saleData: SaleData
+): Promise<boolean> => {
+  return await printReceipt(saleData);
 };
 
 /**

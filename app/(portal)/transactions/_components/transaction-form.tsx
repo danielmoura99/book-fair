@@ -11,31 +11,26 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Book } from "@prisma/client";
 import { Button } from "@/components/ui/button";
-import { Form, FormControl } from "@/components/ui/form";
+import { Form } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Barcode, List, Search } from "lucide-react";
 import { CartItem } from "./cart-item";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useCashRegister } from "@/hooks/use-cash-register";
 import { OperatorSelector } from "./operator-select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PaymentManager } from "./payment-manager";
 import { BarcodeScanner } from "./barcode-scannet";
+import { BookSearchList } from "./book-search-list";
 import { formatPrice } from "@/lib/utils";
 
 import { PrintReceiptDialog } from "@/components/print-receipt-dialog";
 import { usePrinter } from "@/hooks/use-printer";
 import { SaleData } from "@/lib/printer-utils";
+import { StationIdentifier } from "@/components/station-identifier";
 
 const formSchema = z.object({
   operatorName: z.string().min(1, "Selecione o operador"),
@@ -273,6 +268,12 @@ export function TransactionForm({ onSuccess }: { onSuccess?: () => void }) {
 
           <div className="flex flex-col lg:grid lg:grid-cols-2 gap-4">
             <div className="space-y-4">
+              {/* Identificação da Estação */}
+              <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                <span className="text-sm font-medium">Estação:</span>
+                <StationIdentifier />
+              </div>
+
               <OperatorSelector
                 selectedOperator={selectedOperator}
                 onOperatorSelect={(name) => {
@@ -330,37 +331,10 @@ export function TransactionForm({ onSuccess }: { onSuccess?: () => void }) {
                     </TabsContent>
 
                     <TabsContent value="list">
-                      <Select
-                        onValueChange={(bookId) => {
-                          const book = books?.find((b) => b.id === bookId);
-                          if (book) addToCart(book);
-                        }}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione um livro" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {/* ✅ CORRIGIDO: ScrollArea com configurações adequadas */}
-                          <div className="h-[200px] sm:h-[300px] overflow-auto">
-                            {books
-                              ?.sort((a, b) => a.title.localeCompare(b.title))
-                              .map((book) => (
-                                <SelectItem key={book.id} value={book.id}>
-                                  <div className="text-xs sm:text-sm">
-                                    {book.title} - {book.codFle} -{" "}
-                                    {new Intl.NumberFormat("pt-BR", {
-                                      style: "currency",
-                                      currency: "BRL",
-                                    }).format(Number(book.coverPrice))}
-                                    {book.quantity <= 0 ? " (Sem estoque)" : ""}
-                                  </div>
-                                </SelectItem>
-                              ))}
-                          </div>
-                        </SelectContent>
-                      </Select>
+                      <BookSearchList
+                        onSelectBook={addToCart}
+                        disabled={!selectedOperator}
+                      />
                     </TabsContent>
 
                     <TabsContent value="scanner">
