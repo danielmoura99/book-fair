@@ -61,6 +61,15 @@ export function InventoryScannerSection() {
     }
   }, []);
 
+  // Ativar automaticamente o scanner quando a aba "scanner" estiver selecionada
+  useEffect(() => {
+    if (activeTab === "scanner") {
+      setIsScanning(true);
+    } else {
+      setIsScanning(false);
+    }
+  }, [activeTab, setIsScanning]);
+
   useEffect(() => {
     if (!isScanning) return;
 
