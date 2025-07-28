@@ -101,7 +101,6 @@ export function InventoryScannerSection() {
           // Após uma leitura bem-sucedida, focar no input de quantidade
           if (quantityInputRef.current) {
             quantityInputRef.current.focus();
-            quantityInputRef.current.select();
           }
         } catch (error) {
           console.error("Erro ao processar código de barras:", error);
