@@ -94,8 +94,10 @@ export function InventoryScannerSection() {
             return;
           }
 
-          await processBarcode(barcode);
-          setLastScanned(barcode);
+          const success = await processBarcode(barcode);
+          if (success) {
+            setLastScanned(barcode);
+          }
           setBarcode("");
 
           // Após uma leitura bem-sucedida, focar no input de quantidade
@@ -125,6 +127,14 @@ export function InventoryScannerSection() {
     }
   }, [lastScanned]);
 
+  // Limpar mensagem de erro após 5 segundos
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => setError(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
+
   const processBarcode = async (code: string) => {
     try {
       const response = await axios.get(`/api/inventory/barcode/${code}`);
@@ -133,12 +143,14 @@ export function InventoryScannerSection() {
       return true;
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.status === 404) {
+        setError(`Livro não encontrado: ${code}`);
         toast({
           title: "Livro não encontrado",
           description: `Código de barras não reconhecido: ${code}`,
           variant: "destructive",
         });
       } else {
+        setError("Erro ao processar código de barras");
         toast({
           title: "Erro ao processar",
           description: "Ocorreu um erro ao processar o código de barras",
