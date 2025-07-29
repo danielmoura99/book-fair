@@ -1,7 +1,7 @@
 // app/(portal)/inventory/_components/edit-inventory-book-dialog.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -82,21 +82,27 @@ export function EditInventoryBookDialog({
 
   const form = useForm<InventoryBookFormValues>({
     resolver: zodResolver(inventoryBookSchema),
-    defaultValues: {
-      codFle: book.codFle,
-      barCode: book.barCode || "",
-      location: book.location,
-      quantity: book.quantity,
-      coverPrice: book.coverPrice,
-      price: book.price,
-      title: book.title,
-      author: book.author,
-      medium: book.medium,
-      publisher: book.publisher,
-      distributor: book.distributor,
-      subject: book.subject,
-    },
   });
+
+  // Atualizar valores do formulário quando o livro muda
+  useEffect(() => {
+    if (book) {
+      form.reset({
+        codFle: book.codFle,
+        barCode: book.barCode || "",
+        location: book.location,
+        quantity: book.quantity,
+        coverPrice: book.coverPrice,
+        price: book.price,
+        title: book.title,
+        author: book.author,
+        medium: book.medium,
+        publisher: book.publisher,
+        distributor: book.distributor,
+        subject: book.subject,
+      });
+    }
+  }, [book, form]);
 
   const onSubmit = async (data: InventoryBookFormValues) => {
     try {

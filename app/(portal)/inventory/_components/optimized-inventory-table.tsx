@@ -404,7 +404,10 @@ export function OptimizedInventoryTable() {
       {selectedBook && (
         <EditInventoryBookDialog
           open={showEditDialog}
-          onOpenChange={setShowEditDialog}
+          onOpenChange={(open) => {
+            setShowEditDialog(open);
+            if (!open) setSelectedBook(null);
+          }}
           book={selectedBook as any}
           onSuccess={() => refetch()}
         />
@@ -413,7 +416,10 @@ export function OptimizedInventoryTable() {
       {selectedBook && (
         <DeleteInventoryBookDialog
           open={showDeleteDialog}
-          onOpenChange={setShowDeleteDialog}
+          onOpenChange={(open) => {
+            setShowDeleteDialog(open);
+            if (!open) setSelectedBook(null);
+          }}
           book={selectedBook as any}
           onSuccess={() => refetch()}
         />
