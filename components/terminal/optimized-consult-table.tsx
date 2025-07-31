@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 //components/terminal/optimized-consult-table.tsx
 "use client";
 
@@ -63,7 +64,9 @@ export function OptimizedConsultTable() {
 
     // Debug: log para ver quantos livros vieram da API
     if (searchTerm.trim()) {
-      console.log(`🔍 Busca: "${searchTerm}" → API retornou ${data.books.length} livros`);
+      console.log(
+        `🔍 Busca: "${searchTerm}" → API retornou ${data.books.length} livros`
+      );
       console.log(`📡 Termo enviado para API: "${expandedSearch}"`);
     }
 
@@ -75,7 +78,7 @@ export function OptimizedConsultTable() {
     // A API já fez busca accent-insensitive, mas vamos adicionar filtro para casos específicos
     return data.books.filter((book) => {
       // A API já filtrou a maioria dos casos, então aceitamos tudo que veio dela
-      let matchesAPI = true;
+      const matchesAPI = true;
 
       // Casos específicos para "Joana"/"Joanna" - termos parciais e completos
       if (
@@ -88,10 +91,19 @@ export function OptimizedConsultTable() {
         search.includes("joana") ||
         search.includes("joanna")
       ) {
-        const mediumName = book.medium.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-        const authorName = book.author.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-        const titleName = book.title.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-        
+        const mediumName = book.medium
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "");
+        const authorName = book.author
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "");
+        const titleName = book.title
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "");
+
         // Se o usuário digitou "joana", aceitar tanto "joana" quanto "joanna" nos resultados
         if (search === "joana") {
           return (
@@ -103,7 +115,7 @@ export function OptimizedConsultTable() {
             titleName.includes("joanna")
           );
         }
-        
+
         // Para outros casos, busca normal
         return (
           mediumName.includes("joana") ||
@@ -117,13 +129,16 @@ export function OptimizedConsultTable() {
 
       // Caso específico para "angelis"
       if (search.includes("angelis")) {
-        const mediumName = book.medium.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-        const authorName = book.author.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-        
-        return (
-          mediumName.includes("angelis") ||
-          authorName.includes("angelis")
-        );
+        const mediumName = book.medium
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "");
+        const authorName = book.author
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "");
+
+        return mediumName.includes("angelis") || authorName.includes("angelis");
       }
 
       return matchesAPI;
@@ -364,45 +379,55 @@ export function OptimizedConsultTable() {
                         {book.codFle}
                       </span>
                     </div>
-                    
+
                     {/* Linha 2: Autor e Médium */}
                     <div className="text-sm text-gray-600">
                       <span className="font-medium">Autor:</span> {book.author}
                       {book.medium && book.medium !== book.author && (
                         <span className="ml-2">
-                          <span className="font-medium">Médium:</span> {book.medium}
+                          <span className="font-medium">Médium:</span>{" "}
+                          {book.medium}
                         </span>
                       )}
                     </div>
-                    
+
                     {/* Linha 3: Editora e Local */}
                     <div className="text-sm text-gray-600">
-                      <span className="font-medium">Editora:</span> {book.publisher}
+                      <span className="font-medium">Editora:</span>{" "}
+                      {book.publisher}
                       <span className="ml-2">
-                        <span className="font-medium">Local:</span> {book.location}
+                        <span className="font-medium">Local:</span>{" "}
+                        {book.location}
                       </span>
                     </div>
-                    
+
                     {/* Linha 4: Assunto */}
                     <div className="text-sm text-gray-600">
-                      <span className="font-medium">Assunto:</span> {book.subject}
+                      <span className="font-medium">Assunto:</span>{" "}
+                      {book.subject}
                     </div>
-                    
+
                     {/* Linha 5: Preços e Quantidade */}
                     <div className="flex justify-between items-center pt-2 border-t">
                       <div className="flex items-center gap-4">
                         <div>
-                          <div className="text-xs text-gray-500">Quantidade</div>
+                          <div className="text-xs text-gray-500">
+                            Quantidade
+                          </div>
                           <div
                             className={`font-bold ${
-                              book.quantity === 0 ? "text-red-500" : "text-green-600"
+                              book.quantity === 0
+                                ? "text-red-500"
+                                : "text-green-600"
                             }`}
                           >
                             {book.quantity}
                           </div>
                         </div>
                         <div>
-                          <div className="text-xs text-gray-500">Preço Feira</div>
+                          <div className="text-xs text-gray-500">
+                            Preço Feira
+                          </div>
                           <div className="font-medium text-blue-600">
                             {new Intl.NumberFormat("pt-BR", {
                               style: "currency",
@@ -412,7 +437,9 @@ export function OptimizedConsultTable() {
                         </div>
                         {Number(book.price) > 0 && (
                           <div>
-                            <div className="text-xs text-gray-500">Preço Normal</div>
+                            <div className="text-xs text-gray-500">
+                              Preço Normal
+                            </div>
                             <div className="text-sm text-gray-600">
                               {new Intl.NumberFormat("pt-BR", {
                                 style: "currency",
@@ -422,11 +449,14 @@ export function OptimizedConsultTable() {
                           </div>
                         )}
                       </div>
-                      
+
                       {Number(book.price) > Number(book.coverPrice) && (
                         <div className="text-right">
                           <div className="text-xs text-gray-500">Economia</div>
-                          {calculateDiscount(Number(book.price), Number(book.coverPrice))}
+                          {calculateDiscount(
+                            Number(book.price),
+                            Number(book.coverPrice)
+                          )}
                         </div>
                       )}
                     </div>
@@ -456,7 +486,8 @@ export function OptimizedConsultTable() {
                 : `Total de ${data.pagination.total} livros disponíveis`}
               {data.pagination.totalPages > 1 && (
                 <span className="block sm:inline sm:ml-2 text-xs sm:text-sm">
-                  (Página {data.pagination.page} de {data.pagination.totalPages})
+                  (Página {data.pagination.page} de {data.pagination.totalPages}
+                  )
                 </span>
               )}
             </>
