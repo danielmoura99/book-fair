@@ -24,15 +24,23 @@ export function OptimizedConsultTable() {
   // Debounce da busca para evitar requests excessivos
   const debouncedSearch = useDebounce(searchTerm, 500);
 
-  // Expandir busca da API para incluir variações de nomes
+  // Expandir busca da API para incluir variações de nomes antes de enviar
   const expandedSearch = useMemo(() => {
     if (!debouncedSearch.trim()) return "";
 
     const search = debouncedSearch.toLowerCase().trim();
 
-    // Se a busca contém variações conhecidas, expandir para buscar as alternativas também
-    if (search.includes("joana")) {
-      return "joanna"; // Buscar pela grafia correta na API
+    // Para casos específicos como "joana de angelis", buscar especificamente
+    if (search.includes("joana de") || search.includes("joanna de")) {
+      return "joanna"; // Buscar pela grafia mais comum na API
+    }
+    // Se é só "joana" sozinho, buscar por "joanna" para pegar mais resultados
+    if (search === "joana") {
+      return "joanna"; // Buscar por "joanna" que vai pegar mais livros da Joanna de Ângelis
+    }
+    // Se é "joanna", manter
+    if (search === "joanna") {
+      return search;
     }
     if (search.includes("angelis") && !search.includes("ângelis")) {
       return "ângelis"; // Buscar pela grafia correta na API
@@ -43,80 +51,82 @@ export function OptimizedConsultTable() {
 
   const { data, isLoading, error, refetch } = useBooksSearch({
     page,
-    limit: 100, // Aumentar limite para terminal de consulta
+    limit: 200, // Aumentar limite para ter mais chances de encontrar
     search: expandedSearch,
     sortBy: "title",
     sortOrder: "asc",
   });
 
-  // Filtro adicional no frontend para tratar variações de nomes
+  // Filtro adicional no frontend para casos específicos como "Joanna de Ângelis"
   const filteredBooks = useMemo(() => {
     if (!data?.books) return [];
+
+    // Debug: log para ver quantos livros vieram da API
+    if (searchTerm.trim()) {
+      console.log(`🔍 Busca: "${searchTerm}" → API retornou ${data.books.length} livros`);
+      console.log(`📡 Termo enviado para API: "${expandedSearch}"`);
+    }
 
     // Se não há termo de busca, retornar todos os livros da API
     if (!searchTerm.trim()) return data.books;
 
     const search = searchTerm.toLowerCase().trim();
 
-    // Variações comuns para tratar no sistema de busca
-    const nameVariations: { [key: string]: string[] } = {
-      joana: ["joanna"],
-      joanna: ["joana"],
-      angelis: ["ângelis", "angelis", "ângelis"],
-      ângelis: ["angelis", "ângelis", "angelis"],
-    };
-
+    // A API já fez busca accent-insensitive, mas vamos adicionar filtro para casos específicos
     return data.books.filter((book) => {
-      // Verificação normal
+      // A API já filtrou a maioria dos casos, então aceitamos tudo que veio dela
+      let matchesAPI = true;
+
+      // Casos específicos para "Joana"/"Joanna" - termos parciais e completos
       if (
-        book.title.toLowerCase().includes(search) ||
-        book.codFle.toLowerCase().includes(search) ||
-        book.author.toLowerCase().includes(search) ||
-        book.publisher.toLowerCase().includes(search) ||
-        book.subject.toLowerCase().includes(search) ||
-        book.medium.toLowerCase().includes(search)
-      ) {
-        return true;
-      }
-
-      // Verificação para variações de nomes
-      for (const [variant, alternatives] of Object.entries(nameVariations)) {
-        if (search.includes(variant)) {
-          // Construímos termos de busca alternativos substituindo a variação
-          const alternativeSearches = alternatives.map((alt) =>
-            search.replace(variant, alt)
-          );
-
-          // Verificamos se alguma das alternativas corresponde
-          for (const altSearch of alternativeSearches) {
-            if (
-              book.title.toLowerCase().includes(altSearch) ||
-              book.author.toLowerCase().includes(altSearch) ||
-              book.medium.toLowerCase().includes(altSearch)
-            ) {
-              return true;
-            }
-          }
-        }
-      }
-
-      // Caso específico completo para "Joana de Angelis"/"Joanna de Ângelis"
-      if (
+        search === "joana" ||
+        search === "joanna" ||
         search === "joana de angelis" ||
         search === "joanna de angelis" ||
         search === "joana de ângelis" ||
-        search === "joanna de ângelis"
+        search === "joanna de ângelis" ||
+        search.includes("joana") ||
+        search.includes("joanna")
       ) {
-        const mediumName = book.medium.toLowerCase();
+        const mediumName = book.medium.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        const authorName = book.author.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        const titleName = book.title.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        
+        // Se o usuário digitou "joana", aceitar tanto "joana" quanto "joanna" nos resultados
+        if (search === "joana") {
+          return (
+            mediumName.includes("joana") ||
+            mediumName.includes("joanna") ||
+            authorName.includes("joana") ||
+            authorName.includes("joanna") ||
+            titleName.includes("joana") ||
+            titleName.includes("joanna")
+          );
+        }
+        
+        // Para outros casos, busca normal
         return (
-          mediumName.includes("joana de angelis") ||
-          mediumName.includes("joanna de angelis") ||
-          mediumName.includes("joana de ângelis") ||
-          mediumName.includes("joanna de ângelis")
+          mediumName.includes("joana") ||
+          mediumName.includes("joanna") ||
+          authorName.includes("joana") ||
+          authorName.includes("joanna") ||
+          titleName.includes("joana") ||
+          titleName.includes("joanna")
         );
       }
 
-      return false;
+      // Caso específico para "angelis"
+      if (search.includes("angelis")) {
+        const mediumName = book.medium.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        const authorName = book.author.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        
+        return (
+          mediumName.includes("angelis") ||
+          authorName.includes("angelis")
+        );
+      }
+
+      return matchesAPI;
     });
   }, [data?.books, searchTerm]);
 

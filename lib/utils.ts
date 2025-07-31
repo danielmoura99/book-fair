@@ -27,6 +27,13 @@ export function calculatePriceDifference(priceA: number, priceB: number) {
   return Math.abs(priceA - priceB);
 }
 
+export function normalizeText(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
 export function serializeDecimalFields<T>(obj: T): T {
   if (obj === null || obj === undefined) {
     return obj;
