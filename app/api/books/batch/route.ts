@@ -150,6 +150,13 @@ export async function POST(req: Request) {
       }
     }
 
+    // Log do resultado final para debug
+    console.log("Resultado final (Books):", {
+      success: results.success.length,
+      errors: results.errors.length,
+      total: books.length
+    });
+
     return NextResponse.json({
       success: true,
       message: `${results.success.length} livros processados com sucesso. ${results.errors.length} erros encontrados.`,
@@ -157,11 +164,17 @@ export async function POST(req: Request) {
     });
   } catch (error) {
     console.error("Erro ao processar livros:", error);
+    
+    // Retornar estrutura consistente mesmo em caso de erro
     return NextResponse.json(
       {
         success: false,
         error: "Erro ao processar livros",
         message: error instanceof Error ? error.message : "Erro desconhecido",
+        results: {
+          success: [],
+          errors: []
+        }
       },
       { status: 500 }
     );

@@ -101,6 +101,30 @@ export function UploadBooks() {
     return isNaN(value) ? 0 : value;
   };
 
+  const normalizeQuantity = (quantity: string | number): number => {
+    if (!quantity && quantity !== 0) return 0;
+    
+    const str = String(quantity).trim().toUpperCase();
+    
+    // Tratamento de casos especiais comuns em planilhas
+    switch (str) {
+      case 'E':
+      case 'ESGOTADO':
+        return 0;
+      case 'N':
+      case 'NÃO':
+      case 'N/A':
+      case 'NA':
+        return 0;
+      case '':
+      case '-':
+        return 0;
+      default:
+        const num = Number(str);
+        return isNaN(num) ? 0 : Math.max(0, Math.floor(num)); // Apenas inteiros positivos
+    }
+  };
+
   const processExcelFile = async (file: File) => {
     try {
       setIsUploading(true);
@@ -124,22 +148,41 @@ export function UploadBooks() {
 
       setProgress(30);
 
+      // Log das primeiras linhas para debug
+      console.log("Primeiras 3 linhas do Excel (Books):", rows.slice(0, 3));
+
       // Mapear colunas do Excel para nosso formato
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const books: BookData[] = rows.map((row: any) => ({
-        codFle: String(row[0] || "").trim(), // [0] Código FLE ✅
-        barCode: String(row[1] || "").trim() || undefined, // [1] Código de Barras ✅
-        location: String(row[2] || "").trim() || "ESTOQUE", // [2] Local ✅
-        quantity: Number(row[3]) || 0, // [3] Quantidade ✅
-        coverPrice: normalizePrice(row[4]), // [4] Preço Feira ✅
-        price: normalizePrice(row[5]), // [5] Preço Capa ✅
-        title: String(row[6] || "").trim(), // [6] Título ✅
-        author: String(row[7] || "").trim() || "Não informado", // [7] Autor ✅
-        medium: String(row[8] || "").trim() || "Não informado", // [8] Médium ✅
-        publisher: String(row[9] || "").trim(), // [9] Editora ✅
-        distributor: String(row[10] || "").trim(), // [10] Distribuidor ✅
-        subject: String(row[11] || "").trim(), // [11] Assunto ✅
-      }));
+      const books: BookData[] = rows.map((row: any, index: number) => {
+        const rawQuantity = row[3];
+        const normalizedQuantity = normalizeQuantity(rawQuantity);
+        
+        const book = {
+          codFle: String(row[0] || "").trim(), // [0] Código FLE ✅
+          barCode: String(row[1] || "").trim() || undefined, // [1] Código de Barras ✅
+          location: String(row[2] || "").trim() || "ESTOQUE", // [2] Local ✅
+          quantity: normalizedQuantity, // [3] Quantidade normalizada ✅
+          coverPrice: normalizePrice(row[5]), // [5] Preço Feira ✅
+          price: normalizePrice(row[4]), // [4] Preço Capa ✅
+          title: String(row[6] || "").trim(), // [6] Título ✅
+          author: String(row[7] || "").trim() || "Não informado", // [7] Autor ✅
+          medium: String(row[8] || "").trim() || "Não informado", // [8] Médium ✅
+          publisher: String(row[9] || "").trim(), // [9] Editora ✅
+          distributor: String(row[11] || "").trim(), // [11] Distribuidor ✅
+          subject: String(row[10] || "").trim(), // [10] Assunto ✅
+        };
+
+        // Log dos primeiros itens para debug, incluindo quantidade original
+        if (index < 3) {
+          console.log(`Livro ${index + 1}:`, {
+            ...book,
+            quantidadeOriginal: rawQuantity,
+            quantidadeNormalizada: normalizedQuantity
+          });
+        }
+
+        return book;
+      });
 
       setProgress(50);
 
@@ -187,28 +230,42 @@ export function UploadBooks() {
             books: batch,
           });
 
+          // Log da resposta completa para debug
+          console.log("Resposta da API (Books):", response.data);
+
+          // Verificar se a estrutura da resposta está correta
+          if (!response.data || !response.data.results) {
+            throw new Error("Resposta da API inválida - estrutura 'results' não encontrada");
+          }
+
+          const results = response.data.results;
+          const successCount = results.success?.length || 0;
+          const errorsCount = results.errors?.length || 0;
+
+          console.log(`Lote ${currentBatch} (Books): ${successCount} processados, ${errorsCount} erros`);
+
           setProcessingStatus((prev) => ({
             ...prev,
-            validRows: prev.validRows + response.data.results.success.length,
+            validRows: prev.validRows + successCount,
             processedRows: prev.processedRows + batch.length,
-            batchProcessed: response.data.results.success.length,
+            batchProcessed: successCount,
             logs: [
               ...prev.logs,
-              `Lote ${currentBatch} processado com sucesso: ${response.data.results.success.length} livros`,
+              `Lote ${currentBatch} processado: ${successCount} livros adicionados`,
+              ...(errorsCount > 0 ? [`${errorsCount} livros com erro no lote ${currentBatch}`] : [])
             ],
           }));
 
-          if (response.data.results.errors.length > 0) {
+          if (results.errors && results.errors.length > 0) {
             setProcessingStatus((prev) => ({
               ...prev,
-              invalidRows:
-                prev.invalidRows + response.data.results.errors.length,
+              invalidRows: prev.invalidRows + results.errors.length,
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               errors: [
                 ...prev.errors,
-                ...response.data.results.errors.map(
+                ...results.errors.map(
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  (e: any) => `Erro no livro ${e.book}: ${e.error}`
+                  (e: any) => `Erro no livro ${e.book || e.codFle || 'desconhecido'}: ${e.error}`
                 ),
               ],
             }));

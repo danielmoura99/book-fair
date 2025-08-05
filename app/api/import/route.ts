@@ -81,7 +81,8 @@ export async function POST(req: Request) {
                     data: {
                       barCode: book.barCode || existing.barCode,
                       location: book.location || existing.location,
-                      // Manter a quantidade existente, não sobrescrever
+                      // Atualizar quantidade apenas se maior que 0, senão manter existente
+                      quantity: book.quantity > 0 ? book.quantity : existing.quantity,
                       coverPrice: book.coverPrice.toString(),
                       price: book.price.toString(),
                       title: book.title,
@@ -105,7 +106,7 @@ export async function POST(req: Request) {
                       codFle: book.codFle,
                       barCode: book.barCode,
                       location: book.location || "ESTOQUE",
-                      quantity: 0, // Iniciar com quantidade zero
+                      quantity: book.quantity || 0, // Usar quantidade da planilha
                       coverPrice: book.coverPrice.toString(),
                       price: book.price.toString(),
                       title: book.title,
@@ -171,10 +172,25 @@ export async function POST(req: Request) {
       }
     }
 
+    // Garantir que sempre temos arrays válidos na resposta
+    const finalResults = {
+      created: results.created || [],
+      updated: results.updated || [],
+      errors: results.errors || [],
+      success: [...(results.created || []), ...(results.updated || [])]
+    };
+
+    console.log("Resultado final:", {
+      created: finalResults.created.length,
+      updated: finalResults.updated.length,
+      errors: finalResults.errors.length,
+      success: finalResults.success.length
+    });
+
     return NextResponse.json({
       success: true,
-      message: `Importação concluída: ${results.created.length} livros criados, ${results.updated.length} livros atualizados, ${results.errors.length} erros.`,
-      results,
+      message: `Importação concluída: ${finalResults.created.length} livros criados, ${finalResults.updated.length} livros atualizados, ${finalResults.errors.length} erros.`,
+      results: finalResults,
     });
   } catch (error) {
     console.error("Erro ao importar livros para o catálogo:", error);
@@ -184,11 +200,18 @@ export async function POST(req: Request) {
         ? error.message
         : "Erro desconhecido ao importar livros";
 
+    // Retornar estrutura consistente mesmo em caso de erro
     return NextResponse.json(
       {
         success: false,
         error: "Erro ao importar livros",
         message: errorMessage,
+        results: {
+          created: [],
+          updated: [],
+          errors: [],
+          success: []
+        }
       },
       { status: 500 }
     );
