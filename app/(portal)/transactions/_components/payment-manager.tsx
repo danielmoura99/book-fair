@@ -155,7 +155,16 @@ export function PaymentManager({
           </div>
 
           <div className="space-y-4">
-            <Select value={currentMethod} onValueChange={setCurrentMethod}>
+            <Select 
+              value={currentMethod} 
+              onValueChange={(method) => {
+                setCurrentMethod(method);
+                // Auto-preencher com o valor restante quando selecionar a forma de pagamento
+                if (!currentAmount || parseFloat(currentAmount) === 0) {
+                  setCurrentAmount(remainingAmount.toFixed(2));
+                }
+              }}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Selecione a forma de pagamento" />
               </SelectTrigger>
