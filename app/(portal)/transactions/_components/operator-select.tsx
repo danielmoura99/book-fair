@@ -75,8 +75,8 @@ export function OperatorSelector({
   // Se tiver um operador selecionado, mostra o card compacto
   if (selectedOperator) {
     return (
-      <Card className="p-3 mb-4">
-        <div className="flex items-center justify-between">
+      <Card className="p-3 min-h-[72px]">
+        <div className="flex items-center justify-between h-full">
           <div className="flex items-center gap-3">
             <UserCircle className="w-6 h-6 text-primary" />
             <div>
@@ -182,7 +182,7 @@ export function OperatorSelector({
 
   // Se não tiver operador selecionado, mostra apenas um botão para abrir o dialog
   return (
-    <Card className="p-4 mb-6 border-2 border-orange-500">
+    <Card className="p-4 border-2 border-orange-500">
       <div className="text-center space-y-4">
         <div>
           <h2 className="text-xl font-bold">Primeiro Passo</h2>

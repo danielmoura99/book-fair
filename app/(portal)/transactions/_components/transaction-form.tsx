@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Barcode, List, Search } from "lucide-react";
+import { Barcode, List, Search, Monitor } from "lucide-react";
 import { CartItem } from "./cart-item";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useCashRegister } from "@/hooks/use-cash-register";
@@ -258,8 +258,56 @@ export function TransactionForm({ onSuccess }: { onSuccess?: () => void }) {
 
   return (
     <>
+      {/* Operador e Estação na mesma linha */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+        {/* Seleção do Operador - Lado Esquerdo */}
+        <div>
+          <OperatorSelector
+            selectedOperator={selectedOperator}
+            onOperatorSelect={(name) => {
+              setSelectedOperator(name);
+              if (name) {
+                localStorage.setItem("lastOperator", name);
+              }
+            }}
+          />
+        </div>
+
+        {/* Identificação da Estação - Lado Direito */}
+        <Card className="p-2 h-20">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Monitor className="w-6 h-9 text-primary" />
+              <div>
+                <p className="text-sm text-muted-foreground">Estação:</p>
+                <div className="font-semibold">
+                  <StationIdentifier />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              {/* Área reservada para manter simetria com operador */}
+            </div>
+          </div>
+        </Card>
+      </div>
+
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          onKeyDown={(e) => {
+            // Impedir submit do form com Enter, exceto se for em um botão
+            if (
+              e.key === "Enter" &&
+              e.target instanceof HTMLElement &&
+              e.target.tagName !== "BUTTON"
+            ) {
+              e.preventDefault();
+            }
+          }}
+          className="space-y-4"
+        >
           {error && (
             <Alert variant="destructive">
               <AlertDescription>{error}</AlertDescription>
@@ -268,22 +316,6 @@ export function TransactionForm({ onSuccess }: { onSuccess?: () => void }) {
 
           <div className="flex flex-col lg:grid lg:grid-cols-2 gap-4">
             <div className="space-y-4">
-              {/* Identificação da Estação */}
-              <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                <span className="text-sm font-medium">Estação:</span>
-                <StationIdentifier />
-              </div>
-
-              <OperatorSelector
-                selectedOperator={selectedOperator}
-                onOperatorSelect={(name) => {
-                  setSelectedOperator(name);
-                  if (name) {
-                    localStorage.setItem("lastOperator", name);
-                  }
-                }}
-              />
-
               <div
                 className={
                   !selectedOperator ? "opacity-50 pointer-events-none" : ""
@@ -318,6 +350,12 @@ export function TransactionForm({ onSuccess }: { onSuccess?: () => void }) {
                           placeholder="Digite o código FLE"
                           value={searchFleCode}
                           onChange={(e) => setSearchFleCode(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              handleSearchByFle();
+                            }
+                          }}
                           className="text-sm"
                         />
                         <Button

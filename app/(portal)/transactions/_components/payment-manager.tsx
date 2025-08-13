@@ -182,6 +182,12 @@ export function PaymentManager({
               placeholder="Valor Cobrado"
               value={currentAmount}
               onChange={(e) => setCurrentAmount(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleAddPayment();
+                }
+              }}
               min={0}
               max={remainingAmount}
               step={0.01}
@@ -193,6 +199,12 @@ export function PaymentManager({
                 placeholder="Valor Recebido"
                 value={amountReceived}
                 onChange={(e) => setAmountReceived(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddPayment();
+                  }
+                }}
                 min={currentAmount}
                 step={0.01}
               />

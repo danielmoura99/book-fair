@@ -1,11 +1,18 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // components/station-identifier.tsx
 "use client";
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+
 import { Monitor, Edit2, Save, X } from "lucide-react";
 
 export function StationIdentifier() {
@@ -15,7 +22,7 @@ export function StationIdentifier() {
 
   useEffect(() => {
     // Carregar nome da estação do localStorage
-    const savedName = localStorage.getItem('stationName');
+    const savedName = localStorage.getItem("stationName");
     if (savedName) {
       setStationName(savedName);
     } else {
@@ -28,8 +35,8 @@ export function StationIdentifier() {
   const handleSave = () => {
     if (tempName.trim()) {
       setStationName(tempName.trim());
-      localStorage.setItem('stationName', tempName.trim());
-      localStorage.setItem('stationConfiguredAt', new Date().toISOString());
+      localStorage.setItem("stationName", tempName.trim());
+      localStorage.setItem("stationConfiguredAt", new Date().toISOString());
       setIsEditing(false);
     }
   };
@@ -48,13 +55,15 @@ export function StationIdentifier() {
     // Gerar cor baseada no nome da estação
     const colors = [
       "bg-blue-100 text-blue-800",
-      "bg-green-100 text-green-800", 
+      "bg-green-100 text-green-800",
       "bg-purple-100 text-purple-800",
       "bg-orange-100 text-orange-800",
-      "bg-pink-100 text-pink-800"
+      "bg-pink-100 text-pink-800",
     ];
-    
-    const hash = stationName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+
+    const hash = stationName
+      .split("")
+      .reduce((acc, char) => acc + char.charCodeAt(0), 0);
     return colors[hash % colors.length];
   };
 
@@ -63,7 +72,7 @@ export function StationIdentifier() {
       <Card className="border-dashed border-2 border-primary">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Monitor className="h-5 w-5" />
+            <Monitor className="h-4 w-4" />
             Configurar Estação
           </CardTitle>
           <CardDescription>
@@ -76,7 +85,7 @@ export function StationIdentifier() {
               placeholder="Ex: Estação 1, Caixa Principal, etc."
               value={tempName}
               onChange={(e) => setTempName(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSave()}
+              onKeyDown={(e) => e.key === "Enter" && handleSave()}
               autoFocus
             />
             <Button onClick={handleSave} size="sm">
@@ -98,10 +107,7 @@ export function StationIdentifier() {
 
   return (
     <div className="flex items-center gap-2">
-      <Badge className={getStationColor()}>
-        <Monitor className="h-3 w-3 mr-1" />
-        {stationName}
-      </Badge>
+      <span className="text-sm">{stationName}</span>
       <Button
         onClick={handleEdit}
         variant="ghost"
