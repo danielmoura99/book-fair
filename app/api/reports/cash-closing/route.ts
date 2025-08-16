@@ -59,6 +59,12 @@ export async function GET() {
         0
       );
 
+      // Calcular total de livros vendidos no dia
+      const totalBooksSold = register.transactions.reduce(
+        (sum, t) => sum + t.quantity,
+        0
+      );
+
       const formattedWithdrawals = register.withdrawals.map((w) => ({
         id: w.id,
         amount: Number(w.amount),
@@ -100,6 +106,7 @@ export async function GET() {
         finalAmount: Number(register.finalAmount || 0),
         totalSales,
         totalWithdrawals,
+        totalBooksSold, // ✅ NOVO CAMPO
         paymentMethods: Object.entries(paymentSummary).map(
           ([method, data]) => ({
             method,
