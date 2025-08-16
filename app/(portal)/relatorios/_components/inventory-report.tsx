@@ -1,7 +1,7 @@
 // app/(portal)/relatorios/_components/inventory-report.tsx
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import axios from "axios";
 import {
   Table,
@@ -15,7 +15,7 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { InventoryPDFDownloadButton } from "./inventory-pdf-button";
 import { ExcelDownloadButton } from "./excel-download-button";
 import { Button } from "@/components/ui/button";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, ChevronUp, ChevronDown } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 interface InventoryBookData {
@@ -27,11 +27,16 @@ interface InventoryBookData {
   quantitySold: number;
 }
 
+type SortField = 'codFle' | 'title' | 'publisher' | 'distributor' | 'quantity' | 'quantitySold';
+type SortDirection = 'asc' | 'desc';
+
 function InventoryReport() {
-  const queryClient = useQueryClient(); // ✅ ADICIONAR
+  const queryClient = useQueryClient();
+  const [sortField, setSortField] = useState<SortField>('title');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
   const {
-    data: booksInventory = [],
+    data: rawBooksInventory = [],
     isLoading: loading,
     error,
     refetch,
@@ -47,6 +52,48 @@ function InventoryReport() {
     refetchOnMount: true,
     refetchOnWindowFocus: true,
   });
+
+  // Função de sorting
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  // Aplicar sorting aos dados
+  const booksInventory = [...rawBooksInventory].sort((a, b) => {
+    let aValue = a[sortField];
+    let bValue = b[sortField];
+
+    // Para strings, comparar ignorando case
+    if (typeof aValue === 'string' && typeof bValue === 'string') {
+      aValue = aValue.toLowerCase();
+      bValue = bValue.toLowerCase();
+    }
+
+    if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+    if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  // Componente do cabeçalho ordenável
+  const SortableHeader = ({ field, children }: { field: SortField; children: React.ReactNode }) => (
+    <TableHead 
+      className="cursor-pointer hover:bg-muted/50 select-none"
+      onClick={() => handleSort(field)}
+    >
+      <div className="flex items-center justify-between">
+        {children}
+        <div className="ml-2">
+          {sortField === field && sortDirection === 'asc' && <ChevronUp className="h-4 w-4" />}
+          {sortField === field && sortDirection === 'desc' && <ChevronDown className="h-4 w-4" />}
+        </div>
+      </div>
+    </TableHead>
+  );
 
   // ✅ ADICIONAR função de refresh:
   const handleRefresh = async () => {
@@ -131,12 +178,16 @@ function InventoryReport() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Código FLE</TableHead>
-              <TableHead>Título</TableHead>
-              <TableHead>Editora</TableHead>
-              <TableHead>Distribuidor</TableHead>
-              <TableHead className="text-right">Em Estoque</TableHead>
-              <TableHead className="text-right">Vendidos</TableHead>
+              <SortableHeader field="codFle">Código FLE</SortableHeader>
+              <SortableHeader field="title">Título</SortableHeader>
+              <SortableHeader field="publisher">Editora</SortableHeader>
+              <SortableHeader field="distributor">Distribuidor</SortableHeader>
+              <SortableHeader field="quantity">
+                <div className="text-right">Em Estoque</div>
+              </SortableHeader>
+              <SortableHeader field="quantitySold">
+                <div className="text-right">Vendidos</div>
+              </SortableHeader>
             </TableRow>
           </TableHeader>
           <TableBody>

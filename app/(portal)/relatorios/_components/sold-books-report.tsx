@@ -15,8 +15,9 @@ import { formatPrice } from "@/lib/utils";
 import dynamic from "next/dynamic";
 import { ExcelDownloadButton } from "./excel-download-button";
 import { Button } from "@/components/ui/button";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, ChevronUp, ChevronDown } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 
 // Import dinâmico do componente PDF
 const PDFDownloadButton = dynamic(
@@ -35,11 +36,16 @@ interface SoldBookData {
   averagePrice: number;
 }
 
+type SortField = 'codFle' | 'title' | 'totalQuantity' | 'totalAmount' | 'averagePrice';
+type SortDirection = 'asc' | 'desc';
+
 function SoldBooksReport() {
-  const queryClient = useQueryClient(); // ✅ ADICIONAR
+  const queryClient = useQueryClient();
+  const [sortField, setSortField] = useState<SortField>('totalQuantity');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
   const {
-    data: soldBooks = [],
+    data: rawSoldBooks = [],
     isLoading: loading,
     error,
     refetch,
@@ -47,9 +53,7 @@ function SoldBooksReport() {
     queryKey: ["sold-books"],
     queryFn: async () => {
       const response = await axios.get("/api/reports/sold-books");
-      return response.data.sort(
-        (a: SoldBookData, b: SoldBookData) => b.totalQuantity - a.totalQuantity
-      );
+      return response.data;
     },
     // ✅ CONFIGURAÇÕES ANTI-CACHE:
     staleTime: 0,
@@ -57,6 +61,48 @@ function SoldBooksReport() {
     refetchOnMount: true,
     refetchOnWindowFocus: true,
   });
+
+  // Função de sorting
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  // Aplicar sorting aos dados
+  const soldBooks = [...rawSoldBooks].sort((a, b) => {
+    let aValue = a[sortField];
+    let bValue = b[sortField];
+
+    // Para strings, comparar ignorando case
+    if (typeof aValue === 'string' && typeof bValue === 'string') {
+      aValue = aValue.toLowerCase();
+      bValue = bValue.toLowerCase();
+    }
+
+    if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+    if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  // Componente do cabeçalho ordenável
+  const SortableHeader = ({ field, children }: { field: SortField; children: React.ReactNode }) => (
+    <TableHead 
+      className="cursor-pointer hover:bg-muted/50 select-none"
+      onClick={() => handleSort(field)}
+    >
+      <div className="flex items-center justify-between">
+        {children}
+        <div className="ml-2">
+          {sortField === field && sortDirection === 'asc' && <ChevronUp className="h-4 w-4" />}
+          {sortField === field && sortDirection === 'desc' && <ChevronDown className="h-4 w-4" />}
+        </div>
+      </div>
+    </TableHead>
+  );
 
   // ✅ ADICIONAR função de refresh:
   const handleRefresh = async () => {
@@ -145,11 +191,17 @@ function SoldBooksReport() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Código FLE</TableHead>
-              <TableHead>Título</TableHead>
-              <TableHead className="text-right">Quantidade</TableHead>
-              <TableHead className="text-right">Valor Total</TableHead>
-              <TableHead className="text-right">Preço Médio</TableHead>
+              <SortableHeader field="codFle">Código FLE</SortableHeader>
+              <SortableHeader field="title">Título</SortableHeader>
+              <SortableHeader field="totalQuantity">
+                <div className="text-right">Quantidade</div>
+              </SortableHeader>
+              <SortableHeader field="totalAmount">
+                <div className="text-right">Valor Total</div>
+              </SortableHeader>
+              <SortableHeader field="averagePrice">
+                <div className="text-right">Preço Médio</div>
+              </SortableHeader>
             </TableRow>
           </TableHeader>
           <TableBody>

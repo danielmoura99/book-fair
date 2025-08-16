@@ -18,8 +18,9 @@ import { PDFDownloadButton } from "./pdf-download-button";
 import { formatPaymentMethod } from "@/lib/payment-utils";
 import { CashClosingExcelExporter } from "./cash-closing-excel-exporter";
 import { Button } from "@/components/ui/button";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, ChevronUp, ChevronDown } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 
 interface PaymentSummary {
   method: string;
@@ -73,8 +74,13 @@ interface CashClosingData {
   withdrawals?: Withdrawal[];
 }
 
+type PaymentSortField = 'method' | 'count' | 'total';
+type PaymentSortDirection = 'asc' | 'desc';
+
 export function CashClosingReport() {
   const queryClient = useQueryClient();
+  const [paymentSortField, setPaymentSortField] = useState<PaymentSortField>('method');
+  const [paymentSortDirection, setPaymentSortDirection] = useState<PaymentSortDirection>('asc');
 
   const {
     data: closings,
@@ -96,6 +102,32 @@ export function CashClosingReport() {
     await queryClient.invalidateQueries({ queryKey: ["cash-closing-report"] });
     refetch();
   };
+
+  // Função de sorting para formas de pagamento
+  const handlePaymentSort = (field: PaymentSortField) => {
+    if (paymentSortField === field) {
+      setPaymentSortDirection(paymentSortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setPaymentSortField(field);
+      setPaymentSortDirection('asc');
+    }
+  };
+
+  // Componente do cabeçalho ordenável para pagamentos
+  const PaymentSortableHeader = ({ field, children }: { field: PaymentSortField; children: React.ReactNode }) => (
+    <TableHead 
+      className="cursor-pointer hover:bg-muted/50 select-none"
+      onClick={() => handlePaymentSort(field)}
+    >
+      <div className="flex items-center justify-between">
+        {children}
+        <div className="ml-2">
+          {paymentSortField === field && paymentSortDirection === 'asc' && <ChevronUp className="h-4 w-4" />}
+          {paymentSortField === field && paymentSortDirection === 'desc' && <ChevronDown className="h-4 w-4" />}
+        </div>
+      </div>
+    </TableHead>
+  );
 
   if (isLoading) {
     return <div>Carregando...</div>;
@@ -131,6 +163,22 @@ export function CashClosingReport() {
               new Date(b.transactionDate).getTime() -
               new Date(a.transactionDate).getTime()
           );
+
+          // Aplicar sorting aos métodos de pagamento
+          const sortedPaymentMethods = [...closing.paymentMethods].sort((a, b) => {
+            let aValue = a[paymentSortField];
+            let bValue = b[paymentSortField];
+
+            // Para strings, comparar ignorando case
+            if (typeof aValue === 'string' && typeof bValue === 'string') {
+              aValue = aValue.toLowerCase();
+              bValue = bValue.toLowerCase();
+            }
+
+            if (aValue < bValue) return paymentSortDirection === 'asc' ? -1 : 1;
+            if (aValue > bValue) return paymentSortDirection === 'asc' ? 1 : -1;
+            return 0;
+          });
 
           return (
             <Card key={closing.id} className="p-6 mb-4">
@@ -179,13 +227,17 @@ export function CashClosingReport() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Método</TableHead>
-                        <TableHead className="text-right">Quantidade</TableHead>
-                        <TableHead className="text-right">Total</TableHead>
+                        <PaymentSortableHeader field="method">Método</PaymentSortableHeader>
+                        <PaymentSortableHeader field="count">
+                          <div className="text-right">Quantidade</div>
+                        </PaymentSortableHeader>
+                        <PaymentSortableHeader field="total">
+                          <div className="text-right">Total</div>
+                        </PaymentSortableHeader>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {closing.paymentMethods.map((method) => (
+                      {sortedPaymentMethods.map((method) => (
                         <TableRow key={method.method}>
                           <TableCell>
                             {formatPaymentMethod(method.method)}
