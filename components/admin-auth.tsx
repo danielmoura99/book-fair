@@ -11,6 +11,7 @@ import { getStationItem, setStationItem, removeStationItem } from "@/lib/station
 
 // Senha será validada via API para segurança
 const AUTH_STORAGE_KEY = "admin_auth_timestamp";
+const LOGOUT_FLAG_KEY = "admin_logout_flag";
 const AUTH_DURATION = 30 * 60 * 1000; // 30 minutos
 
 interface AdminAuthProps {
@@ -27,6 +28,17 @@ export function AdminAuth({ children, pageName }: AdminAuthProps) {
   const router = useRouter();
 
   useEffect(() => {
+    // Verificar se houve logout forçado
+    const logoutFlag = getStationItem(LOGOUT_FLAG_KEY);
+    if (logoutFlag) {
+      // Se há flag de logout, limpar tudo e forçar reautenticação
+      removeStationItem(AUTH_STORAGE_KEY);
+      removeStationItem(LOGOUT_FLAG_KEY);
+      setIsAuthenticated(false);
+      setLoading(false);
+      return;
+    }
+    
     // Verificar se já está autenticado
     const authTimestamp = getStationItem(AUTH_STORAGE_KEY);
     if (authTimestamp) {
@@ -39,6 +51,7 @@ export function AdminAuth({ children, pageName }: AdminAuthProps) {
       } else {
         // Limpar autenticação expirada
         removeStationItem(AUTH_STORAGE_KEY);
+        setIsAuthenticated(false);
       }
     }
     setLoading(false);
@@ -62,6 +75,8 @@ export function AdminAuth({ children, pageName }: AdminAuthProps) {
       const data = await response.json();
       
       if (data.valid) {
+        // Limpar flag de logout (se existir)
+        removeStationItem(LOGOUT_FLAG_KEY);
         // Salvar timestamp da autenticação
         setStationItem(AUTH_STORAGE_KEY, Date.now().toString());
         setIsAuthenticated(true);
@@ -83,9 +98,17 @@ export function AdminAuth({ children, pageName }: AdminAuthProps) {
   };
 
   const handleLogout = () => {
+    // Marcar flag de logout forçado
+    setStationItem(LOGOUT_FLAG_KEY, "true");
+    // Remover autenticação
     removeStationItem(AUTH_STORAGE_KEY);
     setIsAuthenticated(false);
     setPassword("");
+    
+    // Redirecionionar para vendas após logout
+    setTimeout(() => {
+      router.push("/vendas");
+    }, 500);
   };
 
   if (loading) {
