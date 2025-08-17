@@ -10,6 +10,7 @@ import { CashRegisterStatus } from "./_components/cash-register-status";
 import { TransactionStatement } from "./_components/transaction-statement";
 import { Separator } from "@/components/ui/separator";
 import Navbar from "@/components/sidebar";
+import { AdminAuth } from "@/components/admin-auth";
 
 async function getActiveRegister() {
   return prisma.cashRegister.findFirst({
@@ -86,7 +87,7 @@ export default async function CashPage() {
     : 0;
 
   return (
-    <>
+    <AdminAuth pageName="Caixa">
       <Navbar />
       <div className="flex flex-col space-y-8 p-8">
         {/* Status do Caixa */}
@@ -106,6 +107,6 @@ export default async function CashPage() {
           </div>
         )}
       </div>
-    </>
+    </AdminAuth>
   );
 }

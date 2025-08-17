@@ -123,7 +123,8 @@ export function TransactionForm({ onSuccess }: { onSuccess?: () => void }) {
             : item
         );
       }
-      return [...prev, { bookId: book.id, quantity: 1, book }];
+      // Novo livro aparece no topo da lista
+      return [{ bookId: book.id, quantity: 1, book }, ...prev];
     });
     setError(null);
   };

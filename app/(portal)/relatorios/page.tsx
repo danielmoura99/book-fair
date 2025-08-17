@@ -8,10 +8,11 @@ import { CashClosingReport } from "./_components/cash-closing-report";
 import Navbar from "@/components/sidebar";
 import SoldBooksReport from "./_components/sold-books-report";
 import InventoryReport from "./_components/inventory-report";
+import { AdminAuth } from "@/components/admin-auth";
 
 export default function ReportsPage() {
   return (
-    <>
+    <AdminAuth pageName="Relatórios">
       <Navbar />
       <div className="flex-1 space-y-4 p-8">
         <div className="flex items-center justify-between">
@@ -44,6 +45,6 @@ export default function ReportsPage() {
           </TabsContent>
         </Tabs>
       </div>
-    </>
+    </AdminAuth>
   );
 }

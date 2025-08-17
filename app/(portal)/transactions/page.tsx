@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { AddTransactionButton } from "./_components/add-transaction-button";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { SerializedTransaction } from "@/types";
+import { AdminAuth } from "@/components/admin-auth";
 
 async function getTransactions(): Promise<SerializedTransaction[]> {
   const transactions = await prisma.transaction.findMany({
@@ -41,7 +42,7 @@ export default async function TransactionsPage() {
   const transactions = await getTransactions();
 
   return (
-    <>
+    <AdminAuth pageName="Transações">
       <Navbar />
       <div className="flex flex-col h-screen overflow-hidden">
         <div className="flex items-center justify-between p-6">
@@ -58,6 +59,6 @@ export default async function TransactionsPage() {
           <ScrollBar orientation="horizontal" />
         </ScrollArea>
       </div>
-    </>
+    </AdminAuth>
   );
 }
