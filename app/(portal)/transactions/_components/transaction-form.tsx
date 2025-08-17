@@ -31,6 +31,7 @@ import { PrintReceiptDialog } from "@/components/print-receipt-dialog";
 import { usePrinter } from "@/hooks/use-printer";
 import { SaleData } from "@/lib/printer-utils";
 import { StationIdentifier } from "@/components/station-identifier";
+import { getStationItem, setStationItem } from "@/lib/station-storage";
 
 const formSchema = z.object({
   operatorName: z.string().min(1, "Selecione o operador"),
@@ -58,7 +59,7 @@ export function TransactionForm({ onSuccess }: { onSuccess?: () => void }) {
   const [selectedOperator, setSelectedOperator] = useState<string | null>(
     () => {
       if (typeof window !== "undefined") {
-        return localStorage.getItem("lastOperator");
+        return getStationItem("lastOperator");
       }
       return null;
     }
@@ -268,7 +269,7 @@ export function TransactionForm({ onSuccess }: { onSuccess?: () => void }) {
             onOperatorSelect={(name) => {
               setSelectedOperator(name);
               if (name) {
-                localStorage.setItem("lastOperator", name);
+                setStationItem("lastOperator", name);
               }
             }}
           />

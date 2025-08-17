@@ -14,6 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 
 import { Monitor, Edit2, Save, X } from "lucide-react";
+import { clearStationNameCache } from "@/lib/station-storage";
 
 export function StationIdentifier() {
   const [stationName, setStationName] = useState<string>("");
@@ -37,6 +38,8 @@ export function StationIdentifier() {
       setStationName(tempName.trim());
       localStorage.setItem("stationName", tempName.trim());
       localStorage.setItem("stationConfiguredAt", new Date().toISOString());
+      // Limpar cache para que o novo nome seja usado imediatamente
+      clearStationNameCache();
       setIsEditing(false);
     }
   };

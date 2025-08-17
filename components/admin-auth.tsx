@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Lock } from "lucide-react";
+import { getStationItem, setStationItem, removeStationItem } from "@/lib/station-storage";
 
 // Senha será validada via API para segurança
 const AUTH_STORAGE_KEY = "admin_auth_timestamp";
@@ -27,7 +28,7 @@ export function AdminAuth({ children, pageName }: AdminAuthProps) {
 
   useEffect(() => {
     // Verificar se já está autenticado
-    const authTimestamp = localStorage.getItem(AUTH_STORAGE_KEY);
+    const authTimestamp = getStationItem(AUTH_STORAGE_KEY);
     if (authTimestamp) {
       const now = Date.now();
       const authTime = parseInt(authTimestamp);
@@ -37,7 +38,7 @@ export function AdminAuth({ children, pageName }: AdminAuthProps) {
         setIsAuthenticated(true);
       } else {
         // Limpar autenticação expirada
-        localStorage.removeItem(AUTH_STORAGE_KEY);
+        removeStationItem(AUTH_STORAGE_KEY);
       }
     }
     setLoading(false);
@@ -62,7 +63,7 @@ export function AdminAuth({ children, pageName }: AdminAuthProps) {
       
       if (data.valid) {
         // Salvar timestamp da autenticação
-        localStorage.setItem(AUTH_STORAGE_KEY, Date.now().toString());
+        setStationItem(AUTH_STORAGE_KEY, Date.now().toString());
         setIsAuthenticated(true);
         setError("");
         setPassword("");
@@ -82,7 +83,7 @@ export function AdminAuth({ children, pageName }: AdminAuthProps) {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem(AUTH_STORAGE_KEY);
+    removeStationItem(AUTH_STORAGE_KEY);
     setIsAuthenticated(false);
     setPassword("");
   };

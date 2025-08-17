@@ -27,6 +27,7 @@ import axios from "axios";
 import { Card } from "@/components/ui/card";
 import { UserCircle, Users, UserPlus } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { setStationItem, removeStationItem } from "@/lib/station-storage";
 
 interface OperatorSelectorProps {
   onOperatorSelect: (operatorName: string) => void;
@@ -136,7 +137,7 @@ export function OperatorSelector({
               size="sm"
               onClick={() => {
                 onOperatorSelect("");
-                localStorage.removeItem("lastOperator");
+                removeStationItem("lastOperator");
               }}
             >
               Retirar
@@ -211,7 +212,7 @@ export function OperatorSelector({
                     className="w-full justify-start py-3"
                     onClick={() => {
                       onOperatorSelect(operator.name);
-                      localStorage.setItem("lastOperator", operator.name);
+                      setStationItem("lastOperator", operator.name);
                       setOpenSelect(false);
                     }}
                   >
