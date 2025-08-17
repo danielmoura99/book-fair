@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { SerializedTransaction } from "@/types";
@@ -22,9 +23,21 @@ interface SubjectSalesChartProps {
 
 // Cores para o gráfico de pizza
 const COLORS = [
-  '#2563eb', '#3b82f6', '#60a5fa', '#93c5fd', '#dbeafe',
-  '#f59e0b', '#fbbf24', '#fcd34d', '#fde68a', '#fef3c7',
-  '#ef4444', '#f87171', '#fca5a5', '#fecaca', '#fee2e2'
+  "#2563eb",
+  "#3b82f6",
+  "#60a5fa",
+  "#93c5fd",
+  "#dbeafe",
+  "#f59e0b",
+  "#fbbf24",
+  "#fcd34d",
+  "#fde68a",
+  "#fef3c7",
+  "#ef4444",
+  "#f87171",
+  "#fca5a5",
+  "#fecaca",
+  "#fee2e2",
 ];
 
 export function SubjectSalesChart({ transactions }: SubjectSalesChartProps) {
@@ -32,7 +45,7 @@ export function SubjectSalesChart({ transactions }: SubjectSalesChartProps) {
   const subjectSales = transactions.reduce(
     (acc: Record<string, SubjectSalesData>, curr) => {
       const subject = curr.book.subject || "Não informado";
-      
+
       if (!acc[subject]) {
         acc[subject] = {
           name: subject,
@@ -48,35 +61,41 @@ export function SubjectSalesChart({ transactions }: SubjectSalesChartProps) {
 
   // Calcula total e percentuais
   const totalQuantity = Object.values(subjectSales).reduce(
-    (sum, item) => sum + item.quantity, 0
+    (sum, item) => sum + item.quantity,
+    0
   );
 
   // Converte para array, calcula percentuais e ordena
   const chartData = Object.values(subjectSales)
-    .map(item => ({
+    .map((item) => ({
       ...item,
-      percentage: totalQuantity > 0 ? (item.quantity / totalQuantity) * 100 : 0
+      percentage: totalQuantity > 0 ? (item.quantity / totalQuantity) * 100 : 0,
     }))
     .sort((a, b) => b.quantity - a.quantity)
     .slice(0, 8); // TOP 8 para não poluir o gráfico
 
   // Função customizada para renderizar labels
   const renderCustomizedLabel = ({
-    cx, cy, midAngle, innerRadius, outerRadius, percentage
+    cx,
+    cy,
+    midAngle,
+    innerRadius,
+    outerRadius,
+    percentage,
   }: any) => {
     if (percentage < 5) return null; // Não mostrar label se muito pequeno
-    
+
     const RADIAN = Math.PI / 180;
     const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
     const x = cx + radius * Math.cos(-midAngle * RADIAN);
     const y = cy + radius * Math.sin(-midAngle * RADIAN);
 
     return (
-      <text 
-        x={x} 
-        y={y} 
-        fill="white" 
-        textAnchor={x > cx ? 'start' : 'end'} 
+      <text
+        x={x}
+        y={y}
+        fill="white"
+        textAnchor={x > cx ? "start" : "end"}
         dominantBaseline="central"
         fontSize="12"
         fontWeight="bold"
@@ -101,31 +120,33 @@ export function SubjectSalesChart({ transactions }: SubjectSalesChartProps) {
             dataKey="quantity"
           >
             {chartData.map((entry, index) => (
-              <Cell 
-                key={`cell-${index}`} 
-                fill={COLORS[index % COLORS.length]} 
+              <Cell
+                key={`cell-${index}`}
+                fill={COLORS[index % COLORS.length]}
               />
             ))}
           </Pie>
           <Tooltip
             formatter={(value: number, name: string) => [
               `${value} unidades`,
-              name
+              name,
             ]}
             labelFormatter={(label) => `Assunto: ${label}`}
             contentStyle={{
-              backgroundColor: '#ffffff',
-              border: '1px solid #e2e8f0',
-              borderRadius: '8px',
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+              backgroundColor: "#ffffff",
+              border: "1px solid #e2e8f0",
+              borderRadius: "8px",
+              boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
             }}
           />
-          <Legend 
+          <Legend
             wrapperStyle={{
-              fontSize: '12px',
-              paddingTop: '10px'
+              fontSize: "12px",
+              paddingTop: "10px",
             }}
-            formatter={(value) => value.length > 20 ? `${value.substring(0, 20)}...` : value}
+            formatter={(value) =>
+              value.length > 20 ? `${value.substring(0, 20)}...` : value
+            }
           />
         </PieChart>
       </ResponsiveContainer>

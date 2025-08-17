@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { SerializedTransaction } from "@/types";
@@ -52,7 +53,7 @@ export function DailySalesChart({ transactions }: DailySalesChartProps) {
     const { x, y, width, height, value } = props;
     const xPos = x + width / 2;
     const yPos = y + height / 2;
-    
+
     return (
       <text
         x={xPos}
@@ -73,8 +74,8 @@ export function DailySalesChart({ transactions }: DailySalesChartProps) {
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={chartData} margin={{ bottom: 40, top: 20 }}>
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis 
-            dataKey="date" 
+          <XAxis
+            dataKey="date"
             tick={{ fontSize: 12 }}
             angle={-45}
             textAnchor="end"
@@ -88,17 +89,17 @@ export function DailySalesChart({ transactions }: DailySalesChartProps) {
             formatter={(value: number) => [formatPrice(value), "Valor Vendido"]}
             labelFormatter={(label) => `Data: ${label}`}
             contentStyle={{
-              backgroundColor: '#ffffff',
-              border: '1px solid #e2e8f0',
-              borderRadius: '8px',
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+              backgroundColor: "#ffffff",
+              border: "1px solid #e2e8f0",
+              borderRadius: "8px",
+              boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
             }}
           />
-          <Legend 
+          <Legend
             wrapperStyle={{
-              fontSize: '14px',
-              fontWeight: '500',
-              paddingTop: '10px'
+              fontSize: "14px",
+              fontWeight: "500",
+              paddingTop: "10px",
             }}
           />
           <Bar
@@ -107,9 +108,7 @@ export function DailySalesChart({ transactions }: DailySalesChartProps) {
             radius={[4, 4, 0, 0]}
             name="Valor Vendido"
           >
-            <LabelList 
-              content={renderCustomLabel}
-            />
+            <LabelList content={renderCustomLabel} />
           </Bar>
         </BarChart>
       </ResponsiveContainer>

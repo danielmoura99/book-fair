@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { SerializedTransaction } from "@/types";
@@ -34,7 +35,10 @@ export function DailyQuantityChart({ transactions }: DailyQuantityChartProps) {
   }, {});
 
   // Calcula o total de livros vendidos
-  const totalQuantity = transactions.reduce((sum, transaction) => sum + transaction.quantity, 0);
+  const totalQuantity = transactions.reduce(
+    (sum, transaction) => sum + transaction.quantity,
+    0
+  );
 
   // Formata dados para o gráfico
   const chartData: DailyQuantityData[] = Object.entries(dailyData)
@@ -54,8 +58,8 @@ export function DailyQuantityChart({ transactions }: DailyQuantityChartProps) {
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={chartData} margin={{ bottom: 40, top: 20 }}>
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis 
-            dataKey="date" 
+          <XAxis
+            dataKey="date"
             tick={{ fontSize: 12 }}
             angle={-45}
             textAnchor="end"
@@ -66,20 +70,23 @@ export function DailyQuantityChart({ transactions }: DailyQuantityChartProps) {
             tickFormatter={(value) => `${value} un`}
           />
           <Tooltip
-            formatter={(value: number) => [`${value} unidades`, "Quantidade Vendida"]}
+            formatter={(value: number) => [
+              `${value} unidades`,
+              "Quantidade Vendida",
+            ]}
             labelFormatter={(label) => `Data: ${label}`}
             contentStyle={{
-              backgroundColor: '#ffffff',
-              border: '1px solid #e2e8f0',
-              borderRadius: '8px',
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+              backgroundColor: "#ffffff",
+              border: "1px solid #e2e8f0",
+              borderRadius: "8px",
+              boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
             }}
           />
-          <Legend 
+          <Legend
             wrapperStyle={{
-              fontSize: '14px',
-              fontWeight: '500',
-              paddingTop: '10px'
+              fontSize: "14px",
+              fontWeight: "500",
+              paddingTop: "10px",
             }}
           />
           <Bar
@@ -88,13 +95,13 @@ export function DailyQuantityChart({ transactions }: DailyQuantityChartProps) {
             radius={[4, 4, 0, 0]}
             name="Quantidade Vendida"
           >
-            <LabelList 
-              dataKey="quantity" 
+            <LabelList
+              dataKey="quantity"
               position="center"
               style={{
-                fill: '#ffffff',
-                fontSize: '12px',
-                fontWeight: 'bold'
+                fill: "#ffffff",
+                fontSize: "12px",
+                fontWeight: "bold",
               }}
             />
           </Bar>
