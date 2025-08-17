@@ -121,6 +121,7 @@ export default function PrinterSettingsPage() {
       const testData: SaleData = {
         operatorName: "TESTE DO SISTEMA",
         totalAmount: 25.5,
+        totalDiscount: 4.5, // ✅ EXEMPLO: R$ 4,50 de desconto
         items: [
           {
             title: "Livro de Teste",

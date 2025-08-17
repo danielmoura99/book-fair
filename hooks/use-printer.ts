@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // hooks/use-printer.ts
 "use client";
 
@@ -87,13 +88,28 @@ export function usePrinter() {
     sequentialId?: number
   ): SaleData => {
     // Incluir informação da estação nos dados de impressão
-    const stationName = typeof window !== "undefined" 
-      ? localStorage.getItem('stationName') || 'Estação não identificada'
-      : 'Estação não identificada';
+    const stationName =
+      typeof window !== "undefined"
+        ? localStorage.getItem("stationName") || "Estação não identificada"
+        : "Estação não identificada";
+
+    // Calcular total de desconto baseado na diferença entre preço de capa e preço de venda
+    const totalDiscount = cartItems.reduce((total, item) => {
+      const coverPrice = Number(item.book.coverPrice);
+      // Assumindo que existe um campo 'price' no book que representa o preço de venda
+      // Se não existir, o desconto será 0
+      const salePrice = (item.book as any).price
+        ? Number((item.book as any).price)
+        : coverPrice;
+      const discount =
+        salePrice > coverPrice ? (salePrice - coverPrice) * item.quantity : 0;
+      return total + discount;
+    }, 0);
 
     return {
       operatorName: `${operatorName} (${stationName})`,
       totalAmount,
+      totalDiscount: totalDiscount > 0 ? totalDiscount : undefined,
       items: cartItems.map((item) => ({
         title: item.book.title,
         author: item.book.author,

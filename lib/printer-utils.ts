@@ -9,6 +9,7 @@
 export interface SaleData {
   operatorName: string;
   totalAmount: number;
+  totalDiscount?: number; // ✅ NOVO: Total de desconto da venda
   items: Array<{
     title: string;
     author: string;
@@ -272,6 +273,14 @@ export const generateReceiptCommands = (saleData: SaleData): string => {
     receipt += `  Total: R$ ${item.totalPrice.toFixed(2)}` + NEWLINE;
     receipt += "--------------------------------" + NEWLINE;
   });
+
+  // Subtotal e desconto
+  if (saleData.totalDiscount && saleData.totalDiscount > 0) {
+    const subtotal = saleData.totalAmount + saleData.totalDiscount;
+    receipt += `Subtotal: R$ ${subtotal.toFixed(2)}` + NEWLINE;
+    receipt += `Desconto: R$ ${saleData.totalDiscount.toFixed(2)}` + NEWLINE;
+    receipt += "--------------------------------" + NEWLINE;
+  }
 
   // Total
   receipt += BOLD_ON;
