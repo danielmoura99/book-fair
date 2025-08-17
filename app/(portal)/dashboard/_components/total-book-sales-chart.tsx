@@ -44,21 +44,21 @@ export function TotalBookSalesChart({
     {}
   );
 
-  // Converte para array e ordena por quantidade
-  const chartData = Object.values(bookSales).sort(
-    (a, b) => b.quantity - a.quantity
-  );
+  // Converte para array, ordena por quantidade e pega apenas TOP 10
+  const chartData = Object.values(bookSales)
+    .sort((a, b) => b.quantity - a.quantity)
+    .slice(0, 10); // TOP 10
 
   return (
-    <div className="h-[300px] w-full">
+    <div className="h-full w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={chartData} margin={{ bottom: 60 }}>
+        <BarChart data={chartData} margin={{ bottom: 80 }}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis
             dataKey="name"
             angle={-45}
             textAnchor="end"
-            height={60}
+            height={80}
             tick={{ fontSize: 12 }}
           />
           <YAxis
