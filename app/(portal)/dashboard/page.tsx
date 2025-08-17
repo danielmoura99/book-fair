@@ -11,6 +11,7 @@ import { DailySalesChart } from "./_components/daily-sales-chart";
 import { Card } from "@/components/ui/card";
 import Navbar from "@/components/sidebar";
 import { SerializedTransaction } from "@/types";
+import { AdminAuth } from "@/components/admin-auth";
 
 // ATUALIZADO: Incluir saleGroupId nas consultas
 async function getAllTransactions(): Promise<SerializedTransaction[]> {
@@ -45,7 +46,7 @@ export default async function DashboardPage() {
   const allTransactions = await getAllTransactions();
 
   return (
-    <>
+    <AdminAuth pageName="Dashboard">
       <Navbar />
       <div className="flex h-screen bg-background">
         <div className="flex-1 p-8">
@@ -112,6 +113,6 @@ export default async function DashboardPage() {
           </div>
         </div>
       </div>
-    </>
+    </AdminAuth>
   );
 }
