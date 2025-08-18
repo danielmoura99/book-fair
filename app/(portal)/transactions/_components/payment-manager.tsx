@@ -191,6 +191,7 @@ export function PaymentManager({
               min={0}
               max={remainingAmount}
               step={0.01}
+              className="payment-input"
             />
 
             {currentMethod === "CASH" && (
@@ -207,6 +208,7 @@ export function PaymentManager({
                 }}
                 min={currentAmount}
                 step={0.01}
+                className="payment-input"
               />
             )}
 

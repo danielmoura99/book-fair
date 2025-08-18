@@ -299,13 +299,30 @@ export function TransactionForm({ onSuccess }: { onSuccess?: () => void }) {
         <form
           onSubmit={form.handleSubmit(onSubmit)}
           onKeyDown={(e) => {
-            // Impedir submit do form com Enter, exceto se for em um botão
-            if (
-              e.key === "Enter" &&
-              e.target instanceof HTMLElement &&
-              e.target.tagName !== "BUTTON"
-            ) {
-              e.preventDefault();
+            // ✅ CORREÇÃO MELHORADA: Apenas capturar eventos que originam DENTRO do form
+            if (e.key === "Enter" && e.target instanceof HTMLElement) {
+              const target = e.target;
+              
+              // Verificar se o evento realmente originou de dentro do form
+              const form = e.currentTarget as HTMLFormElement;
+              if (!form.contains(target)) {
+                return; // Ignorar eventos de fora do form
+              }
+              
+              // NÃO bloquear em botões ou inputs específicos DENTRO do form
+              if (
+                target.tagName === "BUTTON" ||
+                target.closest('[data-scanner-area]') || // Área do scanner
+                (target instanceof HTMLInputElement && target.placeholder?.toLowerCase().includes('código')) ||
+                target.classList.contains('search-input')
+              ) {
+                return; // Permitir comportamento normal
+              }
+              
+              // Bloquear apenas em outros inputs dentro do form para evitar submit acidental
+              if (target.tagName === "INPUT" || target.tagName === "TEXTAREA") {
+                e.preventDefault();
+              }
             }
           }}
           className="space-y-4"
@@ -358,7 +375,7 @@ export function TransactionForm({ onSuccess }: { onSuccess?: () => void }) {
                               handleSearchByFle();
                             }
                           }}
-                          className="text-sm"
+                          className="text-sm search-input"
                         />
                         <Button
                           type="button"

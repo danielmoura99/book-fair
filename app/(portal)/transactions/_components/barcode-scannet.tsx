@@ -22,12 +22,31 @@ export function BarcodeScanner({ onScan, disabled }: BarcodeScannerProps) {
     if (disabled) return;
 
     const handleKeyDown = async (event: KeyboardEvent) => {
-      // Ignorar se for um campo de input
-      if (
-        event.target instanceof HTMLInputElement ||
-        event.target instanceof HTMLTextAreaElement
-      ) {
-        return;
+      // ✅ CORREÇÃO: Permitir scanner em inputs específicos e melhorar detecção
+      if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
+        const target = event.target;
+        
+        // Bloquear apenas em inputs críticos (pagamento, operadores, etc)
+        if (
+          target.placeholder?.toLowerCase().includes('valor') ||
+          target.placeholder?.toLowerCase().includes('operador') ||
+          target.placeholder?.toLowerCase().includes('recebido') ||
+          target.type === 'number' ||
+          target.classList.contains('payment-input') ||
+          target.classList.contains('operator-input')
+        ) {
+          return; // Bloquear apenas inputs específicos
+        }
+        
+        // Permitir em inputs de busca (FLE code, search, etc)
+        if (
+          target.placeholder?.toLowerCase().includes('código') ||
+          target.placeholder?.toLowerCase().includes('busca') ||
+          target.placeholder?.toLowerCase().includes('search') ||
+          target.classList.contains('search-input')
+        ) {
+          // Permitir scanner mesmo em inputs de busca
+        }
       }
 
       // Scanner geralmente termina com Enter
@@ -75,7 +94,7 @@ export function BarcodeScanner({ onScan, disabled }: BarcodeScannerProps) {
   }, [lastScanned]);
 
   return (
-    <Card className="p-6">
+    <Card className="p-6" data-scanner-area>
       {error ? (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />

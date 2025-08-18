@@ -165,6 +165,7 @@ export function OperatorSelector({
                         <Input
                           {...field}
                           placeholder="Digite o nome do operador"
+                          className="operator-input"
                         />
                       </FormControl>
                     </FormItem>
@@ -258,6 +259,7 @@ export function OperatorSelector({
                         <Input
                           {...field}
                           placeholder="Digite o nome do operador"
+                          className="operator-input"
                         />
                       </FormControl>
                     </FormItem>
