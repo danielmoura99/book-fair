@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CashClosingReport } from "./_components/cash-closing-report";
 import Navbar from "@/components/sidebar";
 import SoldBooksReport from "./_components/sold-books-report";
+import SoldBooksSimpleReport from "./_components/sold-books-simple-report";
 import InventoryReport from "./_components/inventory-report";
 import { AdminAuth } from "@/components/admin-auth";
 
@@ -22,6 +23,7 @@ export default function ReportsPage() {
         <Tabs defaultValue="books" className="space-y-4">
           <TabsList>
             <TabsTrigger value="books">Livros Vendidos</TabsTrigger>
+            <TabsTrigger value="books-simple">Livros Vendidos Simples</TabsTrigger>
             <TabsTrigger value="inventory">Livros em Estoque</TabsTrigger>
             <TabsTrigger value="cash">Fechamento de Caixa</TabsTrigger>
           </TabsList>
@@ -29,6 +31,12 @@ export default function ReportsPage() {
           <TabsContent value="books" className="space-y-4">
             <Card className="p-6">
               <SoldBooksReport />
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="books-simple" className="space-y-4">
+            <Card className="p-6">
+              <SoldBooksSimpleReport />
             </Card>
           </TabsContent>
 
