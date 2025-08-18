@@ -14,6 +14,9 @@ interface InventoryBookData {
   distributor: string;
   quantity: number;
   quantitySold: number;
+  lastSaleDate: string | null;
+  isOutOfStock: boolean;
+  soldOutDate: string | null;
 }
 
 interface InventoryPDFButtonProps {

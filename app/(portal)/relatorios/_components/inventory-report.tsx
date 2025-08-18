@@ -25,9 +25,12 @@ interface InventoryBookData {
   distributor: string;
   quantity: number;
   quantitySold: number;
+  lastSaleDate: string | null;
+  isOutOfStock: boolean;
+  soldOutDate: string | null;
 }
 
-type SortField = 'codFle' | 'title' | 'publisher' | 'distributor' | 'quantity' | 'quantitySold';
+type SortField = 'codFle' | 'title' | 'publisher' | 'distributor' | 'quantity' | 'quantitySold' | 'soldOutDate';
 type SortDirection = 'asc' | 'desc';
 
 function InventoryReport() {
@@ -67,6 +70,11 @@ function InventoryReport() {
   const booksInventory = [...rawBooksInventory].sort((a, b) => {
     let aValue = a[sortField];
     let bValue = b[sortField];
+
+    // Tratar valores null (datas que podem ser null)
+    if (aValue === null && bValue === null) return 0;
+    if (aValue === null) return sortDirection === 'asc' ? 1 : -1;
+    if (bValue === null) return sortDirection === 'asc' ? -1 : 1;
 
     // Para strings, comparar ignorando case
     if (typeof aValue === 'string' && typeof bValue === 'string') {
@@ -134,6 +142,11 @@ function InventoryReport() {
     Distribuidor: book.distributor,
     "Em Estoque": book.quantity,
     Vendidos: book.quantitySold,
+    "Data Esgotado": book.soldOutDate 
+      ? new Date(book.soldOutDate).toLocaleDateString("pt-BR")
+      : book.quantity === 0 
+        ? "Sem estoque" 
+        : "Disponível",
   }));
 
   return (
@@ -188,6 +201,9 @@ function InventoryReport() {
               <SortableHeader field="quantitySold">
                 <div className="text-right">Vendidos</div>
               </SortableHeader>
+              <SortableHeader field="soldOutDate">
+                <div className="text-center">Data Esgotado</div>
+              </SortableHeader>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -200,6 +216,20 @@ function InventoryReport() {
                 <TableCell className="text-right">{book.quantity}</TableCell>
                 <TableCell className="text-right">
                   {book.quantitySold}
+                </TableCell>
+                <TableCell className="text-center">
+                  {book.soldOutDate ? (
+                    <div className="flex flex-col items-center">
+                      <span className="text-red-600 text-xs font-medium">ESGOTADO</span>
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(book.soldOutDate).toLocaleDateString("pt-BR")}
+                      </span>
+                    </div>
+                  ) : book.quantity === 0 ? (
+                    <span className="text-muted-foreground text-xs">Sem estoque</span>
+                  ) : (
+                    <span className="text-green-600 text-xs">Disponível</span>
+                  )}
                 </TableCell>
               </TableRow>
             ))}
