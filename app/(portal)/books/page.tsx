@@ -6,6 +6,7 @@ import { BookDataTable } from "./_components/book-data-table";
 import { prisma } from "@/lib/prisma";
 import { AddBookButton } from "./_components/add-book-button";
 import { UploadBooks } from "./_components/upload-books";
+import { AdminAuth } from "@/components/admin-auth";
 
 async function getBooks() {
   const books = await prisma.book.findMany({
@@ -25,7 +26,7 @@ export default async function BooksPage() {
   const books = await getBooks();
 
   return (
-    <>
+    <AdminAuth pageName="books">
       <Navbar />
       {/* Aumentando o espaço disponível para a tabela removendo padding lateral e maximizando largura */}
       <div className="flex h-full flex-col space-y-6 overflow-hidden px-2 py-6 max-w-full">
@@ -42,6 +43,6 @@ export default async function BooksPage() {
           <BookDataTable data={books} />
         </div>
       </div>
-    </>
+    </AdminAuth>
   );
 }

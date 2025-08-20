@@ -2,10 +2,11 @@ import Navbar from "@/components/sidebar";
 import { AddBookButton } from "../_components/add-book-button";
 import { UploadBooks } from "../_components/upload-books";
 import { OptimizedBookTable } from "../_components/optimized-book-table";
+import { AdminAuth } from "@/components/admin-auth";
 
 export default function OptimizedBooksPage() {
   return (
-    <>
+    <AdminAuth pageName="books">
       <Navbar />
       <div className="flex h-full flex-col space-y-6 overflow-hidden px-2 py-6 max-w-full">
         <div className="flex w-full items-center justify-between px-4">
@@ -19,6 +20,6 @@ export default function OptimizedBooksPage() {
           <OptimizedBookTable />
         </div>
       </div>
-    </>
+    </AdminAuth>
   );
 }
