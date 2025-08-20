@@ -5,8 +5,7 @@ import { NextResponse } from "next/server";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const transactionDate = new Date(body.date);
-    transactionDate.setHours(12);
+    const transactionDate = body.date ? new Date(body.date) : new Date();
 
     // Verificar se existe um caixa aberto
     const activeCashRegister = await prisma.cashRegister.findFirst({

@@ -113,7 +113,9 @@ export function CashClosingExcelExporter({
 
       // Dados das transações
       const transactionsData = closing.transactions.map((transaction) => ({
-        Data: new Date(transaction.transactionDate).toLocaleString(),
+        Data: new Date(transaction.transactionDate).toLocaleString("pt-BR", {
+          timeZone: "America/Sao_Paulo"
+        }),
         Livro: transaction.book.title,
         "Código FLE": transaction.book.codFle,
         Quantidade: transaction.quantity,
@@ -137,7 +139,9 @@ export function CashClosingExcelExporter({
       // Dados das retiradas, se houver
       if (closing.withdrawals && closing.withdrawals.length > 0) {
         const withdrawalsData = closing.withdrawals.map((withdrawal) => ({
-          Data: new Date(withdrawal.createdAt).toLocaleString(),
+          Data: new Date(withdrawal.createdAt).toLocaleString("pt-BR", {
+            timeZone: "America/Sao_Paulo"
+          }),
           Motivo: withdrawal.reason,
           Valor: withdrawal.amount.toFixed(2),
           Operador: withdrawal.operatorName,

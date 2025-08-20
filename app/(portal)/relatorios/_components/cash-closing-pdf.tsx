@@ -204,7 +204,9 @@ export const CashClosingPDF = ({
               <View key={withdrawal.id} style={styles.tableRow}>
                 <View style={[styles.tableCell, styles.dateTimeCell]}>
                   <Text>
-                    {new Date(withdrawal.createdAt).toLocaleString("pt-BR")}
+                    {new Date(withdrawal.createdAt).toLocaleString("pt-BR", {
+                      timeZone: "America/Sao_Paulo"
+                    })}
                   </Text>
                 </View>
                 <View style={[styles.tableCell, styles.reasonCell]}>
@@ -262,7 +264,8 @@ export const CashClosingPDF = ({
               <View style={[styles.tableCell, styles.dateTimeCell]}>
                 <Text>
                   {new Date(transaction.transactionDate).toLocaleString(
-                    "pt-BR"
+                    "pt-BR",
+                    { timeZone: "America/Sao_Paulo" }
                   )}
                 </Text>
               </View>

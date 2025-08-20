@@ -398,6 +398,7 @@ export function TransactionForm({ onSuccess }: { onSuccess?: () => void }) {
                       <BarcodeScanner
                         onScan={(book) => addToCart(book)}
                         disabled={!selectedOperator}
+                        autoFocus={true}
                       />
                     </TabsContent>
                   </Tabs>

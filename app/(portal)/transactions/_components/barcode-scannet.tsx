@@ -1,7 +1,7 @@
 //app/(portal)/transactions/_components/barcode-scanner.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import axios from "axios";
 import { Book } from "@prisma/client";
@@ -11,12 +11,25 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 interface BarcodeScannerProps {
   onScan: (book: Book) => void;
   disabled?: boolean;
+  autoFocus?: boolean;
 }
 
-export function BarcodeScanner({ onScan, disabled }: BarcodeScannerProps) {
+export function BarcodeScanner({ onScan, disabled, autoFocus = true }: BarcodeScannerProps) {
   const [barcode, setBarcode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [lastScanned, setLastScanned] = useState<string | null>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  // Focar no card automaticamente quando scanner ficar ativo
+  useEffect(() => {
+    if (!disabled && autoFocus && cardRef.current) {
+      // Dar um pequeno delay para garantir que o componente foi montado
+      const timer = setTimeout(() => {
+        cardRef.current?.focus();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [disabled, autoFocus]);
 
   useEffect(() => {
     if (disabled) return;
@@ -94,7 +107,12 @@ export function BarcodeScanner({ onScan, disabled }: BarcodeScannerProps) {
   }, [lastScanned]);
 
   return (
-    <Card className="p-6" data-scanner-area>
+    <Card 
+      ref={cardRef}
+      className="p-6 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2" 
+      data-scanner-area
+      tabIndex={0}
+    >
       {error ? (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />

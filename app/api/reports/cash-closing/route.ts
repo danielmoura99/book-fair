@@ -73,7 +73,7 @@ export async function GET() {
         createdAt: w.createdAt.toISOString(),
       }));
 
-      // Formata as transações
+      // Formata as transações  
       const formattedTransactions = register.transactions.map((t) => ({
         id: t.id,
         transactionDate: t.transactionDate.toISOString(),
