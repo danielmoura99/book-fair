@@ -20,6 +20,11 @@ export async function GET() {
       by: ["bookId"],
       where: {
         type: "SALE",
+        book: {
+          subject: {
+            not: "Outros", // ✅ NOVO: Excluir itens como embalagens, camisetas, etc.
+          },
+        },
       },
       _sum: {
         quantity: true,

@@ -13,9 +13,17 @@ import Navbar from "@/components/sidebar";
 import { SerializedTransaction } from "@/types";
 import { AdminAuth } from "@/components/admin-auth";
 
-// ATUALIZADO: Incluir saleGroupId nas consultas
+// ATUALIZADO: Incluir saleGroupId nas consultas e filtrar apenas SALE de livros (excluir "Outros")
 async function getAllTransactions(): Promise<SerializedTransaction[]> {
   const transactions = await prisma.transaction.findMany({
+    where: {
+      type: "SALE", // ✅ CORREÇÃO: Filtrar apenas vendas para consistência com relatórios
+      book: {
+        subject: {
+          not: "Outros", // ✅ NOVO: Excluir itens como embalagens, camisetas, etc.
+        },
+      },
+    },
     orderBy: {
       sequentialId: "desc",
     },
